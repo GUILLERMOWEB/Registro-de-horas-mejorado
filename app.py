@@ -45,7 +45,7 @@ def inicio():
     if 'user_id' in session:
         return redirect(url_for('login'))
 
-@app.route('/login', methods=['GET', 'POST'])
+   @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username'].strip().lower()
