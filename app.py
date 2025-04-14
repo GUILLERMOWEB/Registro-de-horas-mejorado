@@ -42,8 +42,7 @@ def init_db():
 
 @app.route('/', methods=['GET', 'POST'])
 def inicio():
-    if 'user_id' in session:
-        return redirect(url_for('login'))
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
