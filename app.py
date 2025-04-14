@@ -43,27 +43,7 @@ def init_db():
 @app.route('/', methods=['GET', 'POST'])
 def inicio():
     if 'user_id' in session:
-        return redirect(url_for('dashboard'))
-
-    if request.method == 'POST':
-        username = request.form['username'].strip().lower()
-        password = request.form['password']
-
-        with sqlite3.connect(DATABASE) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, role FROM users WHERE LOWER(username) = ? AND password = ?", (username, password))
-            user = cursor.fetchone()
-
-            if user:
-                session['user_id'] = user[0]
-                session['username'] = username
-                session['role'] = user[1]
-                return redirect(url_for('dashboard'))
-            else:
-                flash('Usuario o contraseña incorrectos')
-
-    return render_template('inicio.html')
-
+        return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
