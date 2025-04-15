@@ -321,8 +321,9 @@ def listar_usuarios():
 
 if __name__ == '__main__':
     import os
-    if not os.path.exists(DATABASE):
-        init_db()
+    # if not os.path.exists(DATABASE):
+    #     init_db()
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
+
 
