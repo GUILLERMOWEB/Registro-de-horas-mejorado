@@ -39,7 +39,8 @@
   </form>
 
   <div class="mb-4 d-flex flex-wrap gap-2">
-    <a href="/exportar" class="btn btn-success">Exportar a Excel</a>
+    <a href="{{ url_for('exportar_excel') }}" class="btn btn-success">Exportar a Excel</a>
+    
     {% if role in ['admin', 'superadmin'] %}
       <a href="/admin" class="btn btn-outline-dark">Panel de Administración</a>
     {% endif %}
