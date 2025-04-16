@@ -5,10 +5,12 @@ import os
 import pandas as pd
 from io import BytesIO
 
-# Utilidad para convertir horas tipo 'HH:MM' a decimal
 def convertir_hora_a_decimal(hora_str):
-    h, m = map(int, hora_str.split(':'))
-    return h + m / 60.0
+    try:
+        return float(int(hora_str.strip()))
+    except ValueError:
+        return 0.0
+
 
 
 app = Flask(__name__)
