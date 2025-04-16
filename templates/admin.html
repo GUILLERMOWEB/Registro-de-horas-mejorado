@@ -75,7 +75,7 @@
           <td>{{ registro.comentarios }}</td>
           <td>{{ registro.id }}</td>
           <td>
-            <form method="POST" action="{{ url_for('borrar_registro', id=registro.id) }}"
+            <form method="POST" action="{{ url_for('borrar_registro', id=registro[0].id) }}">
                 onsubmit="return confirm('¿Estás seguro de que querés eliminar este registro?');">
                 <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
             </form>
