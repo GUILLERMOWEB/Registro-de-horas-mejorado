@@ -5,6 +5,12 @@ import os
 import pandas as pd
 from io import BytesIO
 
+# Utilidad para convertir horas tipo 'HH:MM' a decimal
+def convertir_hora_a_decimal(hora_str):
+    h, m = map(int, hora_str.split(':'))
+    return h + m / 60.0
+
+
 app = Flask(__name__)
 app.secret_key = 'clave_secreta_para_sesiones'
 
@@ -78,7 +84,7 @@ def dashboard():
         fecha = request.form['fecha']
         entrada = request.form['entrada']
         salida = request.form['salida']
-        almuerzo = float(request.form['almuerzo'])
+        almuerzo = convertir_hora_a_decimal(request.form['almuerzo'])
         tarea = request.form['tarea']
         cliente = request.form['cliente']
         comentarios = request.form['comentarios']
