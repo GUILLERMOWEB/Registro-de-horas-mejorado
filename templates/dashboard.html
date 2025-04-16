@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="container mt-5">
-  <h2 class="mb-4">Bienvenido, {{ session['usuario'] }}!</h2>
+  <h2 class="mb-4">Bienvenido, {{ session['username'] }}!</h2>
 
   <form method="POST" action="/dashboard" class="row g-3 mb-4">
     <div class="col-md-2">
@@ -19,7 +19,7 @@
     </div>
     <div class="col-md-2">
       <label for="almuerzo" class="form-label">Almuerzo</label>
-      <input type="time" name="almuerzo" class="form-control" required>
+      <input type="time" name="almuerzo" class="form-control" required step="1">
     </div>
     <div class="col-md-4">
       <label for="tarea" class="form-label">Tarea</label>
@@ -42,6 +42,10 @@
     <a href="/exportar" class="btn btn-success me-2">Exportar a Excel</a>
     <a href="/logout" class="btn btn-secondary">Cerrar sesión</a>
   </div>
+  <div class="alert alert-info">
+    Total de horas trabajadas: <strong>{{ total_horas }}</strong>
+  </div>
+  
 
   <div class="table-responsive">
     <table class="table table-striped table-bordered">
