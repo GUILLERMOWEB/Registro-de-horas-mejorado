@@ -202,6 +202,7 @@ def crear_admin():
     return render_template('crear_admin.html')
 
 @app.route('/admin', methods=['GET', 'POST'])
+@app.route('/administrator', methods=['GET', 'POST'])
 def admin():
     if 'user_id' not in session or session['role'] not in ['admin', 'superadmin']:
         return redirect(url_for('login'))
