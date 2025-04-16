@@ -44,6 +44,10 @@
     {% if role in ['admin', 'superadmin'] %}
       <a href="/administrator" class="btn btn-outline-dark">Panel de Administración</a>
     {% endif %}
+    {% if role in ['admin', 'superadmin'] %}
+    <a href="/admin" class="btn btn-outline-dark me-2">Panel de Administración</a>
+    <a href="{{ url_for('listar_usuarios') }}" class="btn btn-outline-info me-2">Ver usuarios</a>
+  {% endif %}
     <a href="/logout" class="btn btn-secondary">Cerrar sesión</a>
   </div>
 
