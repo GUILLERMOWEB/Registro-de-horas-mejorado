@@ -66,6 +66,7 @@
       <tbody>
         {% for registro, usuario in registros %}
         <tr>
+          <td>{{ usuario.username }}</td>  
           <td>{{ registro.fecha }}</td>
           <td>{{ registro.entrada }}</td>
           <td>{{ registro.salida }}</td>
