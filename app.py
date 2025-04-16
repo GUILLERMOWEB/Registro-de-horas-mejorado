@@ -201,7 +201,7 @@ def crear_admin():
 
     return render_template('crear_admin.html')
 
-@app.route('/admin', methods=['GET', 'POST'])
+
 @app.route('/administrator', methods=['GET', 'POST'])
 def admin():
     if 'user_id' not in session or session['role'] not in ['admin', 'superadmin']:
@@ -219,6 +219,7 @@ def admin():
     return render_template('admin.html', registros=registros, usuarios=usuarios,
                            filtro_usuario=filtro_usuario,
                            username=session['username'], role=session['role'])
+
 
 @app.route('/cambiar_password', methods=['GET', 'POST'])
 def cambiar_password():
