@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 import os
 import pandas as pd
 from io import BytesIO
+from openpyxl.utils import get_column_letter
+from openpyxl import load_workbook
 
 def convertir_hora_a_decimal(hora_str):
     try:
@@ -136,7 +138,7 @@ def exportar_excel():
         return redirect(url_for('login'))
 
     role = session.get('role')
-    
+
     if role in ['admin', 'superadmin']:
         registros = Registro.query.all()
     else:
@@ -153,7 +155,26 @@ def exportar_excel():
     } for r in registros])
 
     archivo = BytesIO()
-    df.to_excel(archivo, index=False)
+    with pd.ExcelWriter(archivo, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Registros')
+        ws = writer.sheets['Registros']
+
+        # ✅ Filtros automáticos
+        ws.auto_filter.ref = ws.dimensions
+
+        # ✅ Ajuste automático del ancho de columnas
+        for col_num, column_cells in enumerate(ws.columns, 1):
+            max_length = 0
+            for cell in column_cells:
+                try:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            column_letter = get_column_letter(col_num)
+            ws.column_dimensions[column_letter].width = adjusted_width
+
     archivo.seek(0)
     return send_file(archivo, as_attachment=True, download_name=f"registros_{session['username']}.xlsx")
 
