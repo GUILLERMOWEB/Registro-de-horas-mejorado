@@ -41,7 +41,7 @@
   <div class="mb-4 d-flex flex-wrap gap-2">
     <a href="{{ url_for('exportar_excel') }}" class="btn btn-success">Exportar a Excel</a>
 
-    {% if role in ['admin', 'superadmin'] %}
+    {% if role in ['superadmin'] %}
       <a href="{{ url_for('listar_usuarios') }}" class="btn btn-outline-info me-2">Ver usuarios</a>
     {% endif %}
 
