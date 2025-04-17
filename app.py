@@ -135,8 +135,15 @@ def exportar_excel():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    registros = Registro.query.filter_by(user_id=session['user_id']).all()
+    role = session.get('role')
+    
+    if role in ['admin', 'superadmin']:
+        registros = Registro.query.all()
+    else:
+        registros = Registro.query.filter_by(user_id=session['user_id']).all()
+
     df = pd.DataFrame([{
+        'usuario': r.user.username,
         'fecha': r.fecha,
         'entrada': r.entrada,
         'salida': r.salida,
@@ -149,6 +156,7 @@ def exportar_excel():
     df.to_excel(archivo, index=False)
     archivo.seek(0)
     return send_file(archivo, as_attachment=True, download_name=f"registros_{session['username']}.xlsx")
+
 
 @app.route('/editar_registro/<int:id>', methods=['GET', 'POST'])
 def editar_registro(id):
