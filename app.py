@@ -263,6 +263,10 @@ def cambiar_password():
         user.password = nueva
         db.session.commit()
         flash('Contraseña actualizada')
+        if password != confirmar:
+            flash('Las contraseñas no coinciden.')
+            return render_template('dashboard.html')
+        
 
     return render_template('cambiar_password.html')
 
