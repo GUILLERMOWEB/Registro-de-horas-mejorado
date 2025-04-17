@@ -61,12 +61,6 @@
                                 <a class="nav-link" href="{{ url_for('crear_admin') }}">Crear Admin</a>
                             </li>
                         {% endif %}
-                        {% if session['role'] == 'admin' %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('admin') }}">Admin</a>
-                            </li>
-                        {% endif %}
-                        
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('cambiar_password') }}">Cambiar contraseña</a>
                         </li>
