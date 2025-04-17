@@ -1,88 +1,82 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
-import sqlite3
-import os
+from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
+import os
 import pandas as pd
+from io import BytesIO
+from openpyxl.utils import get_column_letter
+from openpyxl import load_workbook
+
+def convertir_hora_a_decimal(hora_str):
+    try:
+        return float(int(hora_str.strip()))
+    except ValueError:
+        return 0.0
+
+
 
 app = Flask(__name__)
 app.secret_key = 'clave_secreta_para_sesiones'
 
-DATABASE = 'database.db'
+# Configuración para PostgreSQL
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
-# Crear base de datos si no existe
-def init_db():
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            username TEXT NOT NULL UNIQUE,
-                            password TEXT NOT NULL,
-                            role TEXT NOT NULL)''')
+# ─── Modelos ─────────────────────────────────────
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    role = db.Column(db.String(50), nullable=False)
 
-        cursor.execute('''CREATE TABLE IF NOT EXISTS registros (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER,
-                    fecha TEXT,
-                    entrada TEXT,
-                    salida TEXT,
-                    almuerzo REAL,
-                    horas REAL,
-                    tarea TEXT,
-                    cliente TEXT,
-                    comentarios TEXT,
-                    FOREIGN KEY(user_id) REFERENCES users(id))''')
+    registros = db.relationship('Registro', backref='user', lazy=True)
 
-        # Crear superusuario si no existe
-        cursor.execute("SELECT * FROM users WHERE LOWER(username) = ?", ('guillermo gutierrez',))
-        if not cursor.fetchone():
-            cursor.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-                           ('guillermo gutierrez', '0000', 'superadmin'))
-            conn.commit()
+class Registro(db.Model):
+    __tablename__ = 'registros'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    fecha = db.Column(db.String(50))
+    entrada = db.Column(db.String(50))
+    salida = db.Column(db.String(50))
+    almuerzo = db.Column(db.Float)
+    horas = db.Column(db.Float)
+    tarea = db.Column(db.Text)
+    cliente = db.Column(db.Text)
+    comentarios = db.Column(db.Text)
 
+# ─── Inicialización de la base de datos ─────────
+with app.app_context():
+    db.create_all()
+    if not User.query.filter(db.func.lower(User.username) == 'guillermo gutierrez').first():
+        superadmin = User(username='guillermo gutierrez', password='0000', role='superadmin')
+        db.session.add(superadmin)
+        db.session.commit()
 
+# ─── Rutas ──────────────────────────────────────
 @app.route('/', methods=['GET', 'POST'])
 def inicio():
-    if 'user_id' in session:
-        return redirect(url_for('dashboard'))
-
-    if request.method == 'POST':
-        username = request.form['username'].strip().lower()
-        password = request.form['password']
-
-        with sqlite3.connect(DATABASE) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, role FROM users WHERE LOWER(username) = ? AND password = ?", (username, password))
-            user = cursor.fetchone()
-
-            if user:
-                session['user_id'] = user[0]
-                session['username'] = username
-                session['role'] = user[1]
-                return redirect(url_for('dashboard'))
-            else:
-                flash('Usuario o contraseña incorrectos')
-
-    return render_template('inicio.html')
-
+    return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username'].strip().lower()
-        password = request.form['password'] 
+        password = request.form['password']
 
-        with sqlite3.connect(DATABASE) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, role FROM users WHERE LOWER(username) = ? AND password = ?", (username, password))
-            user = cursor.fetchone()
+        user = User.query.filter(
+            db.func.lower(User.username) == username,
+            User.password == password
+        ).first()
 
-            if user:
-                session['user_id'] = user[0]
-                session['username'] = username
-                session['role'] = user[1]
-                return redirect(url_for('dashboard'))
-            else:
-                flash('Usuario o contraseña incorrectos')
+        if user:
+            session['user_id'] = user.id
+            session['username'] = user.username
+            session['role'] = user.role
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Usuario o contraseña incorrectos')
     return render_template('login.html')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
@@ -94,7 +88,7 @@ def dashboard():
         fecha = request.form['fecha']
         entrada = request.form['entrada']
         salida = request.form['salida']
-        almuerzo = float(request.form['almuerzo'])
+        almuerzo = convertir_hora_a_decimal(request.form['almuerzo'])
         tarea = request.form['tarea']
         cliente = request.form['cliente']
         comentarios = request.form['comentarios']
@@ -108,65 +102,96 @@ def dashboard():
             flash("Error en el formato de hora. Use HH:MM")
             return redirect(url_for('dashboard'))
 
-        with sqlite3.connect(DATABASE) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""INSERT INTO registros (user_id, fecha, entrada, salida, almuerzo, horas, tarea, cliente, comentarios) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                          (session['user_id'], fecha, entrada, salida, almuerzo, round(horas_trabajadas, 2), tarea, cliente, comentarios))
-
-            conn.commit()
+        nuevo_registro = Registro(
+            user_id=session['user_id'],
+            fecha=fecha,
+            entrada=entrada,
+            salida=salida,
+            almuerzo=almuerzo,
+            horas=round(horas_trabajadas, 2),
+            tarea=tarea,
+            cliente=cliente,
+            comentarios=comentarios
+        )
+        db.session.add(nuevo_registro)
+        db.session.commit()
         flash('Registro guardado exitosamente')
 
     filtros = request.args
-    query = "SELECT fecha, entrada, salida, almuerzo, horas, tarea, cliente, comentarios, id FROM registros WHERE user_id = ?"
-    params = [session['user_id']]
+    registros_query = Registro.query.filter_by(user_id=session['user_id'])
 
     if 'fecha' in filtros:
-        query += " AND fecha = ?"
-        params.append(filtros['fecha'])
+        registros_query = registros_query.filter_by(fecha=filtros['fecha'])
 
-    query += " ORDER BY fecha DESC"
+    registros = registros_query.order_by(Registro.fecha.desc()).all()
+    total_horas = sum([r.horas for r in registros if r.horas])
 
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
-        cursor.execute(query, params)
-        registros = cursor.fetchall()
-        total_horas = sum([r[4] for r in registros])
-
-    return render_template('dashboard.html', username=session['username'], role=session['role'], registros=registros, total_horas=round(total_horas, 2))
-
+    return render_template('dashboard.html',
+                           username=session['username'],
+                           role=session['role'],
+                           registros=registros,
+                           total_horas=round(total_horas, 2))
 
 @app.route('/exportar_excel')
 def exportar_excel():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    user_id = session['user_id']
-    with sqlite3.connect(DATABASE) as conn:
-        df = pd.read_sql_query("SELECT fecha, entrada, salida, almuerzo, horas, tarea FROM registros WHERE user_id = ?", conn, params=(user_id,))
+    role = session.get('role')
 
-    archivo = f"registros_{session['username']}.xlsx"
-    df.to_excel(archivo, index=False)
-    return send_file(archivo, as_attachment=True)
+    if role in ['admin', 'superadmin']:
+        registros = Registro.query.all()
+    else:
+        registros = Registro.query.filter_by(user_id=session['user_id']).all()
+
+    df = pd.DataFrame([{
+        'usuario': r.user.username,
+        'fecha': r.fecha,
+        'entrada': r.entrada,
+        'salida': r.salida,
+        'almuerzo': r.almuerzo,
+        'horas': r.horas,
+        'tarea': r.tarea
+    } for r in registros])
+
+    archivo = BytesIO()
+    with pd.ExcelWriter(archivo, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Registros')
+        ws = writer.sheets['Registros']
+
+        # ✅ Filtros automáticos
+        ws.auto_filter.ref = ws.dimensions
+
+        # ✅ Ajuste automático del ancho de columnas
+        for col_num, column_cells in enumerate(ws.columns, 1):
+            max_length = 0
+            for cell in column_cells:
+                try:
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)))
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            column_letter = get_column_letter(col_num)
+            ws.column_dimensions[column_letter].width = adjusted_width
+
+    archivo.seek(0)
+    return send_file(archivo, as_attachment=True, download_name=f"registros_{session['username']}.xlsx")
+
 
 @app.route('/editar_registro/<int:id>', methods=['GET', 'POST'])
 def editar_registro(id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
-        if request.method == 'POST':
-            fecha = request.form['fecha']
-            horas = request.form['horas']
-            tarea = request.form['tarea']
-            cursor.execute("UPDATE registros SET fecha = ?, horas = ?, tarea = ? WHERE id = ?",
-                           (fecha, horas, tarea, id))
-            conn.commit()
-            return redirect(url_for('admin') if session['role'] == 'superadmin' else url_for('dashboard'))
+    registro = Registro.query.get_or_404(id)
 
-        cursor.execute("SELECT fecha, horas, tarea FROM registros WHERE id = ?", (id,))
-        registro = cursor.fetchone()
+    if request.method == 'POST':
+        registro.fecha = request.form['fecha']
+        registro.horas = request.form['horas']
+        registro.tarea = request.form['tarea']
+        db.session.commit()
+        return redirect(url_for('admin') if session['role'] == 'superadmin' else url_for('dashboard'))
 
     return render_template('editar_registro.html', registro=registro, id=id)
 
@@ -174,10 +199,9 @@ def editar_registro(id):
 def borrar_registro(id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM registros WHERE id = ?", (id,))
-        conn.commit()
+    registro = Registro.query.get_or_404(id)
+    db.session.delete(registro)
+    db.session.commit()
     return redirect(url_for('admin') if session['role'] == 'superadmin' else url_for('dashboard'))
 
 @app.route('/crear_admin', methods=['GET', 'POST'])
@@ -198,53 +222,34 @@ def crear_admin():
             flash('Las contraseñas no coinciden.')
             return render_template('crear_admin.html')
 
-        with sqlite3.connect(DATABASE) as conn:
-            cursor = conn.cursor()
-            try:
-                cursor.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-                               (username, password, 'admin'))
-                conn.commit()
-                flash('Administrador creado correctamente')
-            except sqlite3.IntegrityError:
-                flash('Ese nombre de usuario ya existe.')
+        if User.query.filter_by(username=username).first():
+            flash('Ese nombre de usuario ya existe.')
+        else:
+            nuevo_admin = User(username=username, password=password, role='admin')
+            db.session.add(nuevo_admin)
+            db.session.commit()
+            flash('Administrador creado correctamente')
 
     return render_template('crear_admin.html')
 
 
-@app.route('/admin', methods=['GET', 'POST'])
+@app.route('/administrator', methods=['GET', 'POST'])
 def admin():
     if 'user_id' not in session or session['role'] not in ['admin', 'superadmin']:
         return redirect(url_for('login'))
 
     filtro_usuario = request.form.get('filtro_usuario') if request.method == 'POST' else None
 
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
+    usuarios = User.query.with_entities(User.id, User.username).all()
 
-        cursor.execute("SELECT id, username FROM users")
-        usuarios = cursor.fetchall()
+    if filtro_usuario:
+        registros = db.session.query(Registro, User).join(User).filter(User.id == filtro_usuario).order_by(Registro.fecha.desc()).all()
+    else:
+        registros = db.session.query(Registro, User).join(User).order_by(Registro.fecha.desc()).all()
 
-        if filtro_usuario:
-            cursor.execute('''
-                SELECT registros.id, users.username, registros.fecha, registros.horas, registros.tarea
-                FROM registros
-                JOIN users ON registros.user_id = users.id
-                WHERE users.id = ?
-                ORDER BY registros.fecha DESC
-            ''', (filtro_usuario,))
-        else:
-            cursor.execute('''
-                SELECT registros.id, users.username, registros.fecha, registros.horas, registros.tarea
-                FROM registros
-                JOIN users ON registros.user_id = users.id
-                ORDER BY registros.fecha DESC
-            ''')
-
-        registros = cursor.fetchall()
-
-    return render_template('admin.html', registros=registros, usuarios=usuarios, 
-                       filtro_usuario=filtro_usuario,
-                       username=session['username'], role=session['role'])
+    return render_template('admin.html', registros=registros, usuarios=usuarios,
+                           filtro_usuario=filtro_usuario,
+                           username=session['username'], role=session['role'])
 
 
 @app.route('/cambiar_password', methods=['GET', 'POST'])
@@ -254,10 +259,9 @@ def cambiar_password():
 
     if request.method == 'POST':
         nueva = request.form['nueva']
-        with sqlite3.connect(DATABASE) as conn:
-            cursor = conn.cursor()
-            cursor.execute("UPDATE users SET password = ? WHERE id = ?", (nueva, session['user_id']))
-            conn.commit()
+        user = User.query.get(session['user_id'])
+        user.password = nueva
+        db.session.commit()
         flash('Contraseña actualizada')
 
     return render_template('cambiar_password.html')
@@ -277,20 +281,17 @@ def crear_usuario():
         password = request.form['password']
         confirmar = request.form['confirmar_password']
 
-    if password != confirmar:
-        flash('Las contraseñas no coinciden.')
-        return render_template('crear_usuario.html')
+        if password != confirmar:
+            flash('Las contraseñas no coinciden.')
+            return render_template('crear_usuario.html')
 
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
-        try:
-            cursor.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-                           (username, password, 'usuario'))
-            conn.commit()
-            flash('Usuario creado exitosamente.')
-        except sqlite3.IntegrityError:
+        if User.query.filter_by(username=username).first():
             flash('Ese nombre de usuario ya existe.')
-
+        else:
+            nuevo_usuario = User(username=username, password=password, role='usuario')
+            db.session.add(nuevo_usuario)
+            db.session.commit()
+            flash('Usuario creado exitosamente.')
 
     return render_template('crear_usuario.html')
 
@@ -305,37 +306,25 @@ def registro():
             flash('Las contraseñas no coinciden.')
             return render_template('registro.html')
 
-        with sqlite3.connect(DATABASE) as conn:
-            cursor = conn.cursor()
-            try:
-                cursor.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-                               (username, password, 'usuario'))
-                conn.commit()
-                flash('Usuario creado exitosamente. Ahora podés iniciar sesión.')
-                return redirect(url_for('login'))
-            except sqlite3.IntegrityError:
-                flash('Ese nombre de usuario ya existe.')
+        if User.query.filter_by(username=username).first():
+            flash('Ese nombre de usuario ya existe.')
+        else:
+            nuevo_usuario = User(username=username, password=password, role='usuario')
+            db.session.add(nuevo_usuario)
+            db.session.commit()
+            flash('Usuario creado exitosamente. Ahora podés iniciar sesión.')
+            return redirect(url_for('login'))
 
     return render_template('registro.html')
 
 @app.route('/usuarios')
 def listar_usuarios():
     if 'user_id' not in session or session['role'] not in ['admin', 'superadmin']:
-
         return redirect(url_for('login'))
 
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, username, role FROM users")
-        usuarios = cursor.fetchall()
-
+    usuarios = User.query.with_entities(User.id, User.username, User.role).all()
     return render_template('usuarios.html', usuarios=usuarios)
 
-
 if __name__ == '__main__':
-    import os
-    if not os.path.exists(DATABASE):
-        init_db()
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host='0.0.0.0', port=port)
-
