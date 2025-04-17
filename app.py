@@ -130,7 +130,7 @@ def dashboard():
                            registros=registros,
                            total_horas=round(total_horas, 2))
 
-@app.route('/Exportar_excel')
+@app.route('/exportar_excel')
 def exportar_excel():
     if 'user_id' not in session:
         return redirect(url_for('login'))
