@@ -40,11 +40,11 @@ class Registro(db.Model):
     fecha = db.Column(db.String(50))
     entrada = db.Column(db.String(50))
     salida = db.Column(db.String(50))
-    almuerzo = db.Column(db.Float)
-    horas = db.Column(db.Float)
     tarea = db.Column(db.Text)
-    cliente = db.Column(db.Text)
+    almuerzo = db.Column(db.Float)
     comentarios = db.Column(db.Text)
+    cliente = db.Column(db.Text)
+    
 
 # ─── Inicialización de la base de datos ─────────
 with app.app_context():
@@ -187,9 +187,14 @@ def editar_registro(id):
     registro = Registro.query.get_or_404(id)
 
     if request.method == 'POST':
-        registro.fecha = request.form['fecha']
-        registro.horas = request.form['horas']
+        registro.fecha = request.form['fecha']       
+        registro.entrada = request.form['entrada']
+        registro.salida = request.form['salida']
         registro.tarea = request.form['tarea']
+        registro.almuerzo = request.form['almuerzo']
+        registro.comentarios = request.form['comentarios']
+        registro.cliente = request.form['cliente']
+        
         db.session.commit()
         return redirect(url_for('admin') if session['role'] == 'superadmin' else url_for('dashboard'))
 
