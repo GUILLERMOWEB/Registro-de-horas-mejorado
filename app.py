@@ -259,12 +259,20 @@ def cambiar_password():
 
     if request.method == 'POST':
         nueva = request.form['nueva']
+        confirmar = request.form['confirmar']  # Se agrega para la comparación de contraseñas
+
+        if nueva != confirmar:
+            flash('Las contraseñas no coinciden.')
+            return render_template('cambiar_password.html')
+
+        # Si las contraseñas coinciden, actualizarla en la base de datos
         user = User.query.get(session['user_id'])
         user.password = nueva
         db.session.commit()
         flash('Contraseña actualizada')
 
     return render_template('cambiar_password.html')
+
 
 @app.route('/logout')
 def logout():
