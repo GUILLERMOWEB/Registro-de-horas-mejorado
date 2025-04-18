@@ -219,16 +219,16 @@ def crear_admin():
             return render_template('crear_admin.html')
 
         if password != confirmar:
-            flash('Las contraseñas no coinciden.')
+            flash('Las contraseñas no coinciden.', category='danger')
             return render_template('crear_admin.html')
 
         if User.query.filter_by(username=username).first():
-            flash('Ese nombre de usuario ya existe.')
+            flash('Ese nombre de usuario ya existe.', category='danger')
         else:
             nuevo_admin = User(username=username, password=password, role='admin')
             db.session.add(nuevo_admin)
             db.session.commit()
-            flash('Administrador creado correctamente')
+            flash('Administrador creado correctamente', category='success')
 
     return render_template('crear_admin.html')
 
@@ -262,14 +262,14 @@ def cambiar_password():
         confirmar = request.form['confirmar']  # Se agrega para la comparación de contraseñas
 
         if nueva != confirmar:
-            flash('Las contraseñas no coinciden.')
+            flash('Las contraseñas no coinciden.', category='danger')
             return render_template('cambiar_password.html')
 
         # Si las contraseñas coinciden, actualizarla en la base de datos
         user = User.query.get(session['user_id'])
         user.password = nueva
         db.session.commit()
-        flash('Contraseña actualizada')
+        flash('Contraseña actualizada', category='success')
 
     return render_template('cambiar_password.html')
 
@@ -290,16 +290,17 @@ def crear_usuario():
         confirmar = request.form['confirmar_password']
 
         if password != confirmar:
-            flash('Las contraseñas no coinciden.')
+            flash('Las contraseñas no coinciden.', category='danger')
             return render_template('crear_usuario.html')
 
         if User.query.filter_by(username=username).first():
-            flash('Ese nombre de usuario ya existe.')
+            flash('Ese nombre de usuario ya existe.', category='danger')
         else:
             nuevo_usuario = User(username=username, password=password, role='usuario')
             db.session.add(nuevo_usuario)
             db.session.commit()
-            flash('Usuario creado exitosamente.')
+            flash('Usuario creado exitosamente.', category='success')
+
 
     return render_template('crear_usuario.html')
 
@@ -311,16 +312,16 @@ def registro():
         confirmar = request.form['confirmar_password']
 
         if password != confirmar:
-            flash('Las contraseñas no coinciden.')
+            flash('Las contraseñas no coinciden.', category='danger')
             return render_template('registro.html')
 
         if User.query.filter_by(username=username).first():
-            flash('Ese nombre de usuario ya existe.')
+            flash('Ese nombre de usuario ya existe.' , category='danger')
         else:
             nuevo_usuario = User(username=username, password=password, role='usuario')
             db.session.add(nuevo_usuario)
             db.session.commit()
-            flash('Usuario creado exitosamente. Ahora podés iniciar sesión.')
+            flash('Usuario creado exitosamente. Ahora podés iniciar sesión.', category='success')
             return redirect(url_for('login'))
 
     return render_template('registro.html')
