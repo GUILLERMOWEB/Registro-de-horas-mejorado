@@ -76,7 +76,7 @@ def login():
             session['role'] = user.role
             return redirect(url_for('dashboard'))
         else:
-            flash('Usuario o contraseña incorrectos' category='danger')
+            flash('Usuario o contraseña incorrectos', category='danger')
     return render_template('login.html')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
@@ -115,7 +115,7 @@ def dashboard():
         )
         db.session.add(nuevo_registro)
         db.session.commit()
-        flash('Registro guardado exitosamente'category='success')
+        flash('Registro guardado exitosamente', category='success')
 
     filtros = request.args
     registros_query = Registro.query.filter_by(user_id=session['user_id'])
@@ -215,7 +215,7 @@ def crear_admin():
         confirmar = request.form.get('confirmar_password')
 
         if not username or not password or not confirmar:
-            flash('Todos los campos son obligatorios.'category='warning')
+            flash('Todos los campos son obligatorios.', category='warning')
             return render_template('crear_admin.html')
 
         if password != confirmar:
