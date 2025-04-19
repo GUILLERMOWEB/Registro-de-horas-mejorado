@@ -29,17 +29,16 @@
                 <button type="submit" class="btn btn-primary w-100"><i class="bi bi-person-check-fill me-1"></i>Registrarse</button>
             </form>
 
-            {% with messages = get_flashed_messages() %}
+            {% with messages = get_flashed_messages(with_categories=True) %}
                 {% if messages %}
-                    <div class="alert alert-info mt-3">
-                        <ul class="mb-0">
-                            {% for message in messages %}
-                                <li>{{ message }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} mt-3 mx-3" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
                 {% endif %}
             {% endwith %}
+
 
             <div class="text-center mt-3">
                 <a href="{{ url_for('login') }}" class="btn btn-link">Volver al inicio de sesión</a>
