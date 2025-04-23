@@ -247,20 +247,19 @@ def exportar_excel():
 
 @app.route('/editar_registro/<int:id>', methods=['GET', 'POST'])
 def editar_registro(id):
-    registro = Registro.query.get_or_404(id)
-
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
+    registro = Registro.query.get_or_404(id)
+
     if request.method == 'POST':
-        # Recoger los datos del formulario
         fecha = request.form['fecha']
         entrada = request.form['entrada']
         salida = request.form['salida']
 
         almuerzo_horas = int(request.form.get('almuerzo_horas', 0))
         almuerzo_minutos = int(request.form.get('almuerzo_minutos', 0))
-        almuerzo = almuerzo_horas + (almuerzo_minutos / 60)  # Convertir almuerzo a decimal
+        almuerzo = almuerzo_horas + (almuerzo_minutos / 60)
 
         try:
             viaje_ida = float(request.form.get('viaje_ida', 0) or 0)
@@ -276,21 +275,18 @@ def editar_registro(id):
         comentarios = request.form.get('comentarios', '')
 
         try:
-            formato_hora = "%H:%M"
-            t_entrada = datetime.strptime(entrada, formato_hora)
-            t_salida = datetime.strptime(salida, formato_hora)
-
-            # Calcular las horas trabajadas (restando el tiempo de almuerzo)
+            t_entrada = datetime.strptime(entrada, "%H:%M")
+            t_salida = datetime.strptime(salida, "%H:%M")
             horas_trabajadas = (t_salida - t_entrada - timedelta(hours=almuerzo)).total_seconds() / 3600
         except ValueError:
             flash("Error en el formato de hora. Use HH:MM", "danger")
             return redirect(url_for('editar_registro', id=id))
 
-        # Actualizar el registro
+        # Guardar cambios
         registro.fecha = fecha
         registro.entrada = entrada
         registro.salida = salida
-        registro.almuerzo = almuerzo
+        registro.almuerzo = round(almuerzo, 2)
         registro.horas = round(horas_trabajadas, 2)
         registro.viaje_ida = viaje_ida
         registro.viaje_vuelta = viaje_vuelta
@@ -302,9 +298,12 @@ def editar_registro(id):
 
         db.session.commit()
         flash('Registro actualizado exitosamente', category='success')
-        return redirect(url_for('dashboard'))
+
+        # Redirigir según rol
+        return redirect(url_for('admin') if session['role'] in ['admin', 'superadmin'] else url_for('dashboard'))
 
     return render_template('editar_registro.html', registro=registro)
+
 
 
 @app.route('/borrar_registro/<int:id>', methods=['POST'])
