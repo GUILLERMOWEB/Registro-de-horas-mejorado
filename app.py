@@ -258,7 +258,11 @@ def editar_registro(id):
         salida = request.form['salida']
 
         almuerzo_horas = int(request.form.get('almuerzo_horas', 0))
-        almuerzo_minutos = int(request.form.get('almuerzo_minutos', 0))
+        almuerzo_minutos = request.form.get('almuerzo_minutos', '0')  # Valor por defecto '0' si no se proporciona
+        try:
+            almuerzo_minutos = int(float(almuerzo_minutos))  # Convertir primero a float y luego a int
+        except ValueError:
+            almuerzo_minutos = 0  # Valor por defecto 0 si falla la conversión
         almuerzo = almuerzo_horas + (almuerzo_minutos / 60)
 
         try:
@@ -303,6 +307,7 @@ def editar_registro(id):
         return redirect(url_for('admin') if session['role'] in ['admin', 'superadmin'] else url_for('dashboard'))
 
     return render_template('editar_registro.html', registro=registro)
+
 
 
 
