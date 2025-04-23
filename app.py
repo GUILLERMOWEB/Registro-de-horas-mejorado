@@ -257,13 +257,8 @@ def editar_registro(id):
         entrada = request.form['entrada']
         salida = request.form['salida']
 
-        almuerzo_horas = int(request.form.get('almuerzo_horas', 0))
-        almuerzo_minutos = request.form.get('almuerzo_minutos', '0')  # Valor por defecto '0' si no se proporciona
-        try:
-            almuerzo_minutos = int(float(almuerzo_minutos))  # Convertir primero a float y luego a int
-        except ValueError:
-            almuerzo_minutos = 0  # Valor por defecto 0 si falla la conversión
-        almuerzo = almuerzo_horas + (almuerzo_minutos / 60)
+        almuerzo_horas = int(request.form.get('almuerzo_horas', 0))       
+        almuerzo = almuerzo_horas
 
         try:
             viaje_ida = float(request.form.get('viaje_ida', 0) or 0)

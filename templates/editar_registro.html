@@ -23,10 +23,6 @@
       <input type="number" step="0.1" name="almuerzo_horas" class="form-control" value="{{ registro.almuerzo|int }}" min="0" required>
     </div>
     <div class="col-md-2">
-      <label for="almuerzo_minutos" class="form-label">Minutos de Almuerzo</label>
-      <input type="number" name="almuerzo_minutos" class="form-control" value="{{ (registro.almuerzo % 1) * 60 | round }}" min="0" max="60" step="1" required>
-    </div>
-    <div class="col-md-2">
       <label for="viaje_ida" class="form-label">Duración Viaje Ida (h)</label>
       <input type="number" step="0.01" name="viaje_ida" class="form-control" value="{{ registro.viaje_ida }}">
     </div>
