@@ -207,7 +207,7 @@ def dashboard():
         (r.horas or 0) + (r.viaje_ida or 0) + (r.viaje_vuelta or 0)
         for r in registros
     ])
-       total_km = sum([
+    total_km = sum([
         (r.km_ida or 0) + (r.km_vuelta or 0)
         for r in registros
     ])
