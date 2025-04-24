@@ -10,6 +10,7 @@ from io import BytesIO
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from flask_migrate import Migrate
+#from app import db
 
 
 def convertir_hora_a_decimal(hora_str):
@@ -59,6 +60,15 @@ class Registro(db.Model):
     tarea = db.Column(db.Text)
     cliente = db.Column(db.Text)
     comentarios = db.Column(db.Text)
+    
+    
+class ClienteModel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+
+    def __repr__(self):
+        return f'<Cliente {self.nombre}>'
+
 
 # ─── Inicialización de la base de datos ─────────
 with app.app_context():
@@ -104,7 +114,7 @@ def dashboard():
         salida = request.form['salida']
 
         try:
-            almuerzo_horas = int(request.form.get('almuerzo_horas', 0))
+            almuerzo_horas = int(float(request.form.get('almuerzo_horas', 0) or 0))
             almuerzo_minutos = int(request.form.get('almuerzo_minutos', 0))
         except ValueError:
             flash("El tiempo de almuerzo debe ser un número válido", "danger")
