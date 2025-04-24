@@ -114,8 +114,9 @@ def dashboard():
         salida = request.form['salida']
 
         try:
-            almuerzo_horas = int(request.form.get('almuerzo_horas', 0))  # Cambiar a entero
-            almuerzo = timedelta(hours=almuerzo_horas)  # Solo con horas
+            almuerzo_horas = int(float(request.form.get('almuerzo_horas', 0)))
+            almuerzo = timedelta(hours=almuerzo_horas)
+
 
             
         except ValueError:
@@ -267,8 +268,9 @@ def editar_registro(id):
         entrada = request.form['entrada']
         salida = request.form['salida']
 
-        almuerzo_horas = int(request.form.get('almuerzo_horas', 0))  # Cambiar a entero
-        almuerzo = timedelta(hours=almuerzo_horas)  # Solo con horas
+        almuerzo_horas = int(float(request.form.get('almuerzo_horas', 0)))
+        almuerzo = timedelta(hours=almuerzo_horas)
+
 
 
         try:
