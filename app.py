@@ -268,10 +268,6 @@ def editar_registro(id):
         entrada = request.form['entrada']
         salida = request.form['salida']
 
-        almuerzo_horas = int(float(request.form.get('almuerzo_horas', 0)))
-        almuerzo = timedelta(hours=almuerzo_horas)
-
-
 
         try:
             viaje_ida = float(request.form.get('viaje_ida', 0) or 0)
@@ -285,11 +281,17 @@ def editar_registro(id):
         tarea = request.form.get('tarea', '')
         cliente = request.form.get('cliente', '')
         comentarios = request.form.get('comentarios', '')
+        
+         # 1) Obtener almuerzo en horas enteras
+        almuerzo_horas = int(request.form.get('almuerzo_horas', 0))
+        # 2) Crear un timedelta solo con esas horas
+        almuerzo = timedelta(hours=almuerzo_horas)
+
 
         try:
             t_entrada = datetime.strptime(entrada, "%H:%M")
             t_salida = datetime.strptime(salida, "%H:%M")
-            horas_trabajadas = (t_salida - t_entrada - timedelta(hours=almuerzo)).total_seconds() / 3600
+            horas_trabajadas = duracion.total_seconds() / 3600
         except ValueError:
             flash("Error en el formato de hora. Use HH:MM", "danger")
             return redirect(url_for('editar_registro', id=id))
