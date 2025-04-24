@@ -1,60 +1,73 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-5">
-  <h2>Editar Registro</h2>
-  <form method="POST" class="row g-3 mb-4">
-    <!-- Fecha, entrada y salida -->
+<div class="container mt-4">
+  <h2>Nuevo Registro</h2>
+
+  {# Mensajes flash #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" class="row g-3">
+    <!-- Fecha -->
     <div class="col-md-2">
       <label for="fecha" class="form-label">Fecha</label>
-      <input type="date" name="fecha" class="form-control" value="{{ registro.fecha }}" required>
+      <input type="date" name="fecha" id="fecha" class="form-control" required>
     </div>
+
+    <!-- Horario -->
     <div class="col-md-2">
       <label for="entrada" class="form-label">Hora de Entrada</label>
-      <input type="time" name="entrada" class="form-control" value="{{ registro.entrada }}" required>
+      <input type="time" name="entrada" id="entrada" class="form-control" required>
     </div>
     <div class="col-md-2">
       <label for="salida" class="form-label">Hora de Salida</label>
-      <input type="time" name="salida" class="form-control" value="{{ registro.salida }}" required>
+      <input type="time" name="salida" id="salida" class="form-control" required>
     </div>
 
     <!-- Almuerzo -->
     <div class="col-md-2">
       <label for="almuerzo_horas" class="form-label">Horas de Almuerzo</label>
-      <input type="number" step="0.5" name="almuerzo_horas" class="form-control" value="{{ registro.almuerzo }}" min="0" required>
+      <input type="number" step="0.5" name="almuerzo_horas" id="almuerzo_horas" class="form-control" value="0" min="0" required>
     </div>
 
-    <!-- Viajes y kilómetros -->
+    <!-- Viaje y KM -->
     <div class="col-md-2">
       <label for="viaje_ida" class="form-label">Viaje Ida (h)</label>
-      <input type="number" step="0.01" name="viaje_ida" class="form-control" value="{{ registro.viaje_ida }}">
+      <input type="number" step="0.01" name="viaje_ida" id="viaje_ida" class="form-control" value="0">
     </div>
     <div class="col-md-2">
       <label for="viaje_vuelta" class="form-label">Viaje Vuelta (h)</label>
-      <input type="number" step="0.01" name="viaje_vuelta" class="form-control" value="{{ registro.viaje_vuelta }}">
+      <input type="number" step="0.01" name="viaje_vuelta" id="viaje_vuelta" class="form-control" value="0">
     </div>
     <div class="col-md-2">
       <label for="km_ida" class="form-label">KM Ida</label>
-      <input type="number" step="0.1" name="km_ida" class="form-control" value="{{ registro.km_ida }}">
+      <input type="number" step="0.1" name="km_ida" id="km_ida" class="form-control" value="0">
     </div>
     <div class="col-md-2">
       <label for="km_vuelta" class="form-label">KM Vuelta</label>
-      <input type="number" step="0.1" name="km_vuelta" class="form-control" value="{{ registro.km_vuelta }}">
+      <input type="number" step="0.1" name="km_vuelta" id="km_vuelta" class="form-control" value="0">
     </div>
 
-    <!-- Tarea -->
+    <!-- Tarea y Cliente -->
     <div class="col-md-4">
       <label for="tarea" class="form-label">Tarea</label>
-      <input type="text" name="tarea" class="form-control" value="{{ registro.tarea }}">
+      <input type="text" name="tarea" id="tarea" class="form-control" placeholder="Descripción de la tarea">
     </div>
-
-    <!-- Cliente dinámico -->
     <div class="col-md-4">
       <label for="cliente" class="form-label">Cliente</label>
       <select name="cliente" id="cliente" class="form-select" required>
         <option value="">-- Seleccionar cliente --</option>
         {% for c in clientes %}
-          <option value="{{ c.nombre }}" {% if registro.cliente == c.nombre %}selected{% endif %}>{{ c.nombre }}</option>
+          <option value="{{ c.nombre }}">{{ c.nombre }}</option>
         {% endfor %}
       </select>
     </div>
@@ -62,15 +75,15 @@
     <!-- Comentarios -->
     <div class="col-md-8">
       <label for="comentarios" class="form-label">Comentarios</label>
-      <textarea name="comentarios" class="form-control" rows="3">{{ registro.comentarios }}</textarea>
+      <textarea name="comentarios" id="comentarios" class="form-control" rows="3" placeholder="Comentarios adicionales"></textarea>
     </div>
 
     <!-- Contrato -->
     <div class="col-md-2">
       <label for="contrato" class="form-label">Contrato</label>
       <select name="contrato" id="contrato" class="form-select" required>
-        <option value="1" {% if registro.contrato %}selected{% endif %}>Sí</option>
-        <option value="0" {% if not registro.contrato %}selected{% endif %}>No</option>
+        <option value="1">Sí</option>
+        <option value="0" selected>No</option>
       </select>
     </div>
 
@@ -80,7 +93,7 @@
       <select name="centro_costo_id" id="centro_costo_id" class="form-select">
         <option value="">-- Ninguno --</option>
         {% for cc in centros %}
-          <option value="{{ cc.id }}" {% if registro.centro_costo_id == cc.id %}selected{% endif %}>{{ cc.nombre }}</option>
+          <option value="{{ cc.id }}">{{ cc.nombre }}</option>
         {% endfor %}
       </select>
     </div>
@@ -90,8 +103,8 @@
       <label for="service_order" class="form-label">Service Order</label>
       <select name="service_order" id="service_order" class="form-select">
         <option value="">-- Ninguno --</option>
-        <option value="SM02" {% if registro.service_order == 'SM02' %}selected{% endif %}>SM02</option>
-        <option value="SM03" {% if registro.service_order == 'SM03' %}selected{% endif %}>SM03</option>
+        <option value="SM02">SM02</option>
+        <option value="SM03">SM03</option>
       </select>
     </div>
 
@@ -101,7 +114,7 @@
       <select name="tipo_servicio_id" id="tipo_servicio_id" class="form-select">
         <option value="">-- Ninguno --</option>
         {% for ts in tipos_servicio %}
-          <option value="{{ ts.id }}" {% if registro.tipo_servicio_id == ts.id %}selected{% endif %}>{{ ts.nombre }}</option>
+          <option value="{{ ts.id }}">{{ ts.nombre }}</option>
         {% endfor %}
       </select>
     </div>
@@ -112,14 +125,15 @@
       <select name="linea_id" id="linea_id" class="form-select">
         <option value="">-- Ninguno --</option>
         {% for l in lineas %}
-          <option value="{{ l.id }}" {% if registro.linea_id == l.id %}selected{% endif %}>{{ l.nombre }}</option>
+          <option value="{{ l.id }}">{{ l.nombre }}</option>
         {% endfor %}
       </select>
     </div>
 
-    <!-- Botón actualizar -->
+    <!-- Botones -->
     <div class="col-12">
-      <button type="submit" class="btn btn-primary">Actualizar</button>
+      <button type="submit" class="btn btn-primary">Guardar Registro</button>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-secondary ms-2">Cancelar</a>
     </div>
   </form>
 </div>

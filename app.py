@@ -44,6 +44,21 @@ class User(db.Model):
 
     registros = db.relationship('Registro', backref='user', lazy=True)
 
+class CentroCosto(db.Model):
+    __tablename__ = 'centros_costo'
+    id     = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+
+class TipoServicio(db.Model):
+    __tablename__ = 'tipos_servicio'
+    id     = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+
+class Linea(db.Model):
+    __tablename__ = 'lineas'
+    id     = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False, unique=True)
+
 class Registro(db.Model):
     __tablename__ = 'registros'
     id = db.Column(db.Integer, primary_key=True)
@@ -60,6 +75,14 @@ class Registro(db.Model):
     tarea = db.Column(db.Text)
     cliente = db.Column(db.Text)
     comentarios = db.Column(db.Text)
+    contrato            = db.Column(db.Boolean, nullable=False, default=False)
+    centro_costo_id     = db.Column(db.Integer, db.ForeignKey('centros_costo.id'), nullable=True)
+    service_order       = db.Column(db.String(10), nullable=True)
+    tipo_servicio_id    = db.Column(db.Integer, db.ForeignKey('tipos_servicio.id'), nullable=True)
+    linea_id            = db.Column(db.Integer, db.ForeignKey('lineas.id'), nullable=True)
+    centro_costo   = db.relationship('CentroCosto')
+    tipo_servicio  = db.relationship('TipoServicio')
+    linea          = db.relationship('Linea')
     
     
 class ClienteModel(db.Model):
@@ -263,12 +286,18 @@ def editar_registro(id):
 
     registro = Registro.query.get_or_404(id)
 
+    # Cargar listas para los <select>
+    centros = CentroCosto.query.order_by(CentroCosto.nombre).all()
+    tipos_servicio = TipoServicio.query.order_by(TipoServicio.nombre).all()
+    lineas = Linea.query.order_by(Linea.nombre).all()
+
     if request.method == 'POST':
+        # Campos básicos
         fecha = request.form['fecha']
         entrada = request.form['entrada']
         salida = request.form['salida']
 
-
+        # Viaje y kilómetros
         try:
             viaje_ida = float(request.form.get('viaje_ida', 0) or 0)
             viaje_vuelta = float(request.form.get('viaje_vuelta', 0) or 0)
@@ -278,29 +307,48 @@ def editar_registro(id):
             flash("Las horas de viaje y kilómetros deben ser números.", "danger")
             return redirect(url_for('editar_registro', id=id))
 
+        # Tarea, cliente y comentarios
         tarea = request.form.get('tarea', '')
         cliente = request.form.get('cliente', '')
         comentarios = request.form.get('comentarios', '')
-        
-         # 1) Obtener almuerzo en horas enteras
-        almuerzo_horas = int(request.form.get('almuerzo_horas', 0))
-        # 2) Crear un timedelta solo con esas horas
+
+        # Contrato (Sí/No)
+        contrato = bool(int(request.form.get('contrato', 0)))
+
+        # Centro de Costo Contrato
+        cc_id = request.form.get('centro_costo_id')
+        centro_costo_id = int(cc_id) if cc_id else None
+
+        # Service Order
+        service_order = request.form.get('service_order') or None
+
+        # Tipo de Servicio
+        ts_id = request.form.get('tipo_servicio_id')
+        tipo_servicio_id = int(ts_id) if ts_id else None
+
+        # Línea
+        l_id = request.form.get('linea_id')
+        linea_id = int(l_id) if l_id else None
+
+        # Almuerzo (horas enteras)
+        almuerzo_horas = int(float(request.form.get('almuerzo_horas', 0) or 0))
         almuerzo = timedelta(hours=almuerzo_horas)
 
-
+        # Cálculo de horas trabajadas
         try:
             t_entrada = datetime.strptime(entrada, "%H:%M")
             t_salida = datetime.strptime(salida, "%H:%M")
+            duracion = t_salida - t_entrada - almuerzo
             horas_trabajadas = duracion.total_seconds() / 3600
         except ValueError:
             flash("Error en el formato de hora. Use HH:MM", "danger")
             return redirect(url_for('editar_registro', id=id))
 
-        # Guardar cambios
+        # Guardar cambios en el registro
         registro.fecha = fecha
         registro.entrada = entrada
         registro.salida = salida
-        registro.almuerzo = round(almuerzo, 2)
+        registro.almuerzo = almuerzo_horas
         registro.horas = round(horas_trabajadas, 2)
         registro.viaje_ida = viaje_ida
         registro.viaje_vuelta = viaje_vuelta
@@ -309,14 +357,24 @@ def editar_registro(id):
         registro.tarea = tarea
         registro.cliente = cliente
         registro.comentarios = comentarios
+        registro.contrato = contrato
+        registro.centro_costo_id = centro_costo_id
+        registro.service_order = service_order
+        registro.tipo_servicio_id = tipo_servicio_id
+        registro.linea_id = linea_id
 
         db.session.commit()
-        flash('Registro actualizado exitosamente', category='success')
+        flash('Registro actualizado exitosamente', 'success')
 
         # Redirigir según rol
         return redirect(url_for('admin') if session['role'] in ['admin', 'superadmin'] else url_for('dashboard'))
 
-    return render_template('editar_registro.html', registro=registro)
+    # GET: mostrar formulario con datos y listas
+    return render_template('editar_registro.html',
+                           registro=registro,
+                           centros=centros,
+                           tipos_servicio=tipos_servicio,
+                           lineas=lineas)
 
 
 
@@ -451,6 +509,101 @@ def registro():
             return redirect(url_for('login'))
 
     return render_template('registro.html')
+    
+@app.route('/nuevo_registro', methods=['GET', 'POST'])
+def nuevo_registro():
+    # Verificar sesión
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    # Cargar listas para selects
+    centros        = CentroCosto.query.order_by(CentroCosto.nombre).all()
+    tipos_servicio = TipoServicio.query.order_by(TipoServicio.nombre).all()
+    lineas         = Linea.query.order_by(Linea.nombre).all()
+    clientes       = ClienteModel.query.order_by(ClienteModel.nombre).all()
+
+    if request.method == 'POST':
+        # Campos básicos
+        fecha   = request.form['fecha']
+        entrada = request.form['entrada']
+        salida  = request.form['salida']
+
+        # Viaje y kilómetros
+        try:
+            viaje_ida    = float(request.form.get('viaje_ida', 0) or 0)
+            viaje_vuelta = float(request.form.get('viaje_vuelta', 0) or 0)
+            km_ida       = float(request.form.get('km_ida', 0) or 0)
+            km_vuelta    = float(request.form.get('km_vuelta', 0) or 0)
+        except ValueError:
+            flash("Las horas de viaje y kilómetros deben ser números.", "danger")
+            return redirect(url_for('nuevo_registro'))
+
+        # Tarea, cliente y comentarios
+        tarea       = request.form.get('tarea', '')
+        cliente     = request.form.get('cliente', '')
+        comentarios = request.form.get('comentarios', '')
+
+        # Campos nuevos
+        contrato            = bool(int(request.form.get('contrato', 0)))
+        cc_id               = request.form.get('centro_costo_id')
+        centro_costo_id     = int(cc_id) if cc_id else None
+        service_order       = request.form.get('service_order') or None
+        ts_id               = request.form.get('tipo_servicio_id')
+        tipo_servicio_id    = int(ts_id) if ts_id else None
+        l_id                = request.form.get('linea_id')
+        linea_id            = int(l_id) if l_id else None
+
+        # Almuerzo en horas (entero o decimal)
+        almuerzo_horas = float(request.form.get('almuerzo_horas', 0) or 0)
+        almuerzo = timedelta(hours=almuerzo_horas)
+
+        # Cálculo de horas trabajadas
+        try:
+            t_entrada = datetime.strptime(entrada, "%H:%M")
+            t_salida  = datetime.strptime(salida, "%H:%M")
+            duracion  = t_salida - t_entrada - almuerzo
+            horas_trabajadas = duracion.total_seconds() / 3600
+        except ValueError:
+            flash("Error en el formato de hora. Use HH:MM", "danger")
+            return redirect(url_for('nuevo_registro'))
+
+        # Crear y guardar registro
+        registro = Registro(
+            user_id=session['user_id'],
+            fecha=fecha,
+            entrada=entrada,
+            salida=salida,
+            almuerzo=almuerzo_horas,
+            horas=round(horas_trabajadas, 2),
+            viaje_ida=viaje_ida,
+            viaje_vuelta=viaje_vuelta,
+            km_ida=km_ida,
+            km_vuelta=km_vuelta,
+            tarea=tarea,
+            cliente=cliente,
+            comentarios=comentarios,
+            contrato=contrato,
+            centro_costo_id=centro_costo_id,
+            service_order=service_order,
+            tipo_servicio_id=tipo_servicio_id,
+            linea_id=linea_id
+        )
+        db.session.add(registro)
+        db.session.commit()
+        flash('Registro creado exitosamente', 'success')
+
+        # Redirigir según rol
+        return redirect(url_for('admin') if session.get('role') in ['admin', 'superadmin'] else url_for('dashboard'))
+
+    # GET - mostrar formulario vacío
+    return render_template(
+        'nuevo_registro.html',
+        centros=centros,
+        tipos_servicio=tipos_servicio,
+        lineas=lineas,
+        clientes=clientes
+    )
+
 
 @app.route('/usuarios')
 def listar_usuarios():
@@ -460,45 +613,68 @@ def listar_usuarios():
     usuarios = User.query.with_entities(User.id, User.username, User.role).all()
     return render_template('usuarios.html', usuarios=usuarios)
     
+# ─── CRUD Clientes (solo superadmin) ───────────────────────────
+
 @app.route('/clientes')
 def ver_clientes():
     if 'user_id' not in session or session.get('role') != 'superadmin':
         flash("Acceso denegado", "danger")
         return redirect(url_for('dashboard'))
-
-    clientes = Cliente.query.order_by(Cliente.nombre).all()
+    clientes = ClienteModel.query.order_by(ClienteModel.nombre).all()
     return render_template('clientes.html', clientes=clientes)
+
+@app.route('/agregar_cliente', methods=['GET', 'POST'])
+def agregar_cliente():
+    if 'user_id' not in session or session.get('role') != 'superadmin':
+        flash("Acceso denegado", "danger")
+        return redirect(url_for('dashboard'))
+    if request.method == 'POST':
+        nombre = request.form.get('nombre', '').strip()
+        if not nombre:
+            flash("El nombre no puede estar vacío", "danger")
+        elif ClienteModel.query.filter_by(nombre=nombre).first():
+            flash("Ese cliente ya existe", "warning")
+        else:
+            nuevo = ClienteModel(nombre=nombre)
+            db.session.add(nuevo)
+            db.session.commit()
+            flash("Cliente agregado con éxito", "success")
+            return redirect(url_for('ver_clientes'))
+    return render_template('agregar_cliente.html')
 
 @app.route('/editar_cliente/<int:id>', methods=['GET', 'POST'])
 def editar_cliente(id):
     if 'user_id' not in session or session.get('role') != 'superadmin':
         flash("Acceso denegado", "danger")
         return redirect(url_for('dashboard'))
-
-    cliente = Cliente.query.get_or_404(id)
-
+    cliente = ClienteModel.query.get_or_404(id)
     if request.method == 'POST':
-        nuevo_nombre = request.form.get('nombre')
-        if nuevo_nombre:
+        nuevo_nombre = request.form.get('nombre', '').strip()
+        if not nuevo_nombre:
+            flash("El nombre no puede estar vacío", "danger")
+        elif ClienteModel.query.filter(
+                ClienteModel.nombre == nuevo_nombre,
+                ClienteModel.id != id
+            ).first():
+            flash("Ya existe otro cliente con ese nombre", "warning")
+        else:
             cliente.nombre = nuevo_nombre
             db.session.commit()
             flash("Cliente actualizado con éxito", "success")
             return redirect(url_for('ver_clientes'))
-        flash("El nombre no puede estar vacío", "danger")
-
     return render_template('editar_cliente.html', cliente=cliente)
 
-@app.route('/borrar_cliente/<int:id>')
+@app.route('/borrar_cliente/<int:id>', methods=['POST'])
 def borrar_cliente(id):
     if 'user_id' not in session or session.get('role') != 'superadmin':
         flash("Acceso denegado", "danger")
         return redirect(url_for('dashboard'))
-
-    cliente = Cliente.query.get_or_404(id)
+    cliente = ClienteModel.query.get_or_404(id)
     db.session.delete(cliente)
     db.session.commit()
     flash("Cliente eliminado", "success")
     return redirect(url_for('ver_clientes'))
+
 
 
 if __name__ == '__main__':

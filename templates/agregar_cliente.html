@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Agregar Cliente</h2>
+
+  {# Mostrar mensajes flash #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" class="row g-3">
+    <div class="col-md-6">
+      <label for="nombre" class="form-label">Nombre del Cliente</label>
+      <input type="text" id="nombre" name="nombre" class="form-control" placeholder="Ingrese el nombre del cliente" required>
+    </div>
+
+    <div class="col-12">
+      <button type="submit" class="btn btn-primary">Agregar Cliente</button>
+      <a href="{{ url_for('ver_clientes') }}" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
