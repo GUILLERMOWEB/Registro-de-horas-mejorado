@@ -115,7 +115,6 @@ def dashboard():
 
         try:
             almuerzo_horas = int(float(request.form.get('almuerzo_horas', 0) or 0))
-            almuerzo_minutos = int(request.form.get('almuerzo_minutos', 0))
         except ValueError:
             flash("El tiempo de almuerzo debe ser un número válido", "danger")
             return redirect(url_for('dashboard'))
