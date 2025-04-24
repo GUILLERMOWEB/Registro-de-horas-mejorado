@@ -53,6 +53,13 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('dashboard') }}">Inicio</a>
                         </li>
+                        {% if session.get('role') == 'superadmin' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('ver_clientes') }}">Clientes</a>
+                        </li>
+                    {% endif %}
+
+
                         {% if session['role'] == 'superadmin' %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('admin') }}">Administración</a>
@@ -66,6 +73,7 @@
                                 <a class="nav-link" href="{{ url_for('admin') }}">Administración</a>
                             </li>
                         {% endif %}
+
                         
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('cambiar_password') }}">Cambiar contraseña</a>

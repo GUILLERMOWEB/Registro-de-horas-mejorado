@@ -444,6 +444,47 @@ def listar_usuarios():
 
     usuarios = User.query.with_entities(User.id, User.username, User.role).all()
     return render_template('usuarios.html', usuarios=usuarios)
+    
+@app.route('/clientes')
+def ver_clientes():
+    if 'user_id' not in session or session.get('role') != 'superadmin':
+        flash("Acceso denegado", "danger")
+        return redirect(url_for('dashboard'))
+
+    clientes = Cliente.query.order_by(Cliente.nombre).all()
+    return render_template('clientes.html', clientes=clientes)
+
+@app.route('/editar_cliente/<int:id>', methods=['GET', 'POST'])
+def editar_cliente(id):
+    if 'user_id' not in session or session.get('role') != 'superadmin':
+        flash("Acceso denegado", "danger")
+        return redirect(url_for('dashboard'))
+
+    cliente = Cliente.query.get_or_404(id)
+
+    if request.method == 'POST':
+        nuevo_nombre = request.form.get('nombre')
+        if nuevo_nombre:
+            cliente.nombre = nuevo_nombre
+            db.session.commit()
+            flash("Cliente actualizado con éxito", "success")
+            return redirect(url_for('ver_clientes'))
+        flash("El nombre no puede estar vacío", "danger")
+
+    return render_template('editar_cliente.html', cliente=cliente)
+
+@app.route('/borrar_cliente/<int:id>')
+def borrar_cliente(id):
+    if 'user_id' not in session or session.get('role') != 'superadmin':
+        flash("Acceso denegado", "danger")
+        return redirect(url_for('dashboard'))
+
+    cliente = Cliente.query.get_or_404(id)
+    db.session.delete(cliente)
+    db.session.commit()
+    flash("Cliente eliminado", "success")
+    return redirect(url_for('ver_clientes'))
+
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
