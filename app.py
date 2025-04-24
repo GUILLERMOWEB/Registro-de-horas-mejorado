@@ -207,10 +207,16 @@ def dashboard():
         (r.horas or 0) + (r.viaje_ida or 0) + (r.viaje_vuelta or 0)
         for r in registros
     ])
-    total_km = sum([
+       total_km = sum([
         (r.km_ida or 0) + (r.km_vuelta or 0)
         for r in registros
     ])
+    
+    clientes = ClienteModel.query.order_by(ClienteModel.nombre).all()  # ← CORRECTO
+    centros_costo = CentroCosto.query.order_by(CentroCosto.nombre).all()
+    tipos_servicio = TipoServicio.query.order_by(TipoServicio.nombre).all()
+    lineas = Linea.query.order_by(Linea.nombre).all()
+
 
     return render_template(
         'dashboard.html',
@@ -218,8 +224,14 @@ def dashboard():
         role=session['role'],
         registros=registros,
         total_horas=round(total_horas, 2),
-        total_km=round(total_km, 2)
-    )
+        total_km=round(total_km, 2),
+        clientes=clientes,
+        centros_costo=centros_costo,
+        tipos_servicio=tipos_servicio,
+        lineas=lineas
+)
+
+
 
 
 
@@ -545,13 +557,13 @@ def nuevo_registro():
 
         # Campos nuevos
         contrato            = bool(int(request.form.get('contrato', 0)))
-        cc_id               = request.form.get('centro_costo_id')
-        centro_costo_id     = int(cc_id) if cc_id else None
+        cc_id               = request.form.get('centro_costo')  # Obtener el valor
+        centro_costo_id     = int(cc_id) if cc_id else None    # Convertir si existe, sino None
         service_order       = request.form.get('service_order') or None
-        ts_id               = request.form.get('tipo_servicio_id')
-        tipo_servicio_id    = int(ts_id) if ts_id else None
-        l_id                = request.form.get('linea_id')
-        linea_id            = int(l_id) if l_id else None
+        ts_id               = request.form.get('tipo_servicio')  # Obtener el valor
+        tipo_servicio_id    = int(ts_id) if ts_id else None      # Convertir si existe, sino None
+        l_id                = request.form.get('linea')  # Obtener el valor
+        linea_id            = int(l_id) if l_id else None  # Convertir si existe, sino None
 
         # Almuerzo en horas (entero o decimal)
         almuerzo_horas = float(request.form.get('almuerzo_horas', 0) or 0)
@@ -568,7 +580,7 @@ def nuevo_registro():
             return redirect(url_for('nuevo_registro'))
 
         # Crear y guardar registro
-        registro = Registro(
+        nuevo_registro = Registro(
             user_id=session['user_id'],
             fecha=fecha,
             entrada=entrada,
@@ -583,12 +595,13 @@ def nuevo_registro():
             cliente=cliente,
             comentarios=comentarios,
             contrato=contrato,
-            centro_costo_id=centro_costo_id,
+            centro_costo_id=centro_costo_id,  # Aquí se integra
             service_order=service_order,
-            tipo_servicio_id=tipo_servicio_id,
-            linea_id=linea_id
+            tipo_servicio_id=tipo_servicio_id,  # Aquí se integra
+            linea_id=linea_id  # Aquí se integra
         )
-        db.session.add(registro)
+
+        db.session.add(nuevo_registro)
         db.session.commit()
         flash('Registro creado exitosamente', 'success')
 
@@ -603,6 +616,7 @@ def nuevo_registro():
         lineas=lineas,
         clientes=clientes
     )
+
 
 
 @app.route('/usuarios')

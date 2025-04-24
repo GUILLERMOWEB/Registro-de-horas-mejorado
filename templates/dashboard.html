@@ -20,7 +20,7 @@
     </div>
     <div class="col-md-2">
       <label for="almuerzo_horas" class="form-label">Tiempo de Almuerzo</label>
-      <input type="number" step="0.1" name="almuerzo_horas" class="form-control" value="0" min="0" required>
+      <input type="number" step="0.5" name="almuerzo_horas" class="form-control" value="{{ registro.almuerzo }}" min="0" required>
     </div>
     <div class="col-md-2">
       <label for="viaje_ida" class="form-label">Duración Viaje Ida (h)</label>
@@ -44,7 +44,46 @@
     </div>
     <div class="col-md-4">
       <label for="cliente" class="form-label">Cliente</label>
-      <input type="text" name="cliente" class="form-control">
+      <select name="cliente" class="form-control mb-3" id="cliente">
+        <option value="">Seleccionar cliente...</option>
+        {% for c in clientes %}
+          <option value="{{ c.nombre }}">{{ c.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label for="centro_costo" class="form-label">Centro de Costo</label>
+      <select name="centro_costo" class="form-control">
+        <option value="">Seleccionar centro de costo...</option>
+        {% for c in centros_costo %}
+          <option value="{{ c.id }}">{{ c.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="col-md-4">
+      <label for="tipo_servicio" class="form-label">Tipo de Servicio</label>
+      <select name="tipo_servicio" class="form-control">
+        <option value="">Seleccionar tipo de servicio...</option>
+        {% for t in tipos_servicio %}
+          <option value="{{ t.id }}">{{ t.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="col-md-4">
+      <label for="linea" class="form-label">Línea</label>
+      <select name="linea" class="form-control">
+        <option value="">Seleccionar línea...</option>
+        {% for l in lineas %}
+          <option value="{{ l.id }}">{{ l.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    
+</select>
+
     </div>
     <div class="col-md-8">
       <label for="comentarios" class="form-label">Comentarios</label>
