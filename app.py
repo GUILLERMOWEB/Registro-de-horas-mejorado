@@ -114,12 +114,13 @@ def dashboard():
         salida = request.form['salida']
 
         try:
-            almuerzo_horas = int(float(request.form.get('almuerzo_horas', 0) or 0))
+            almuerzo_horas = int(request.form.get('almuerzo_horas', 0))  # Cambiar a entero
+            almuerzo = timedelta(hours=almuerzo_horas)  # Solo con horas
+
+            
         except ValueError:
             flash("El tiempo de almuerzo debe ser un número válido", "danger")
             return redirect(url_for('dashboard'))
-
-        almuerzo = timedelta(hours=almuerzo_horas, minutes=almuerzo_minutos)
 
         try:
             viaje_ida = float(request.form.get('viaje_ida', 0) or 0)
@@ -266,8 +267,9 @@ def editar_registro(id):
         entrada = request.form['entrada']
         salida = request.form['salida']
 
-        almuerzo_horas = int(request.form.get('almuerzo_horas', 0))       
-        almuerzo = almuerzo_horas
+        almuerzo_horas = int(request.form.get('almuerzo_horas', 0))  # Cambiar a entero
+        almuerzo = timedelta(hours=almuerzo_horas)  # Solo con horas
+
 
         try:
             viaje_ida = float(request.form.get('viaje_ida', 0) or 0)
