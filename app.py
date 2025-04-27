@@ -229,6 +229,8 @@ def dashboard():
     )
 
 
+
+
 @app.route('/exportar_excel')
 def exportar_excel():
     if 'user_id' not in session:
@@ -236,13 +238,26 @@ def exportar_excel():
 
     role = session.get('role')
 
-    if role in ['admin', 'superadmin']:
-        registros = Registro.query.all()
-    else:
-        registros = Registro.query.filter_by(user_id=session['user_id']).all()
+    # 🔵 Obtener filtros de fecha
+    fecha_desde = request.args.get('fecha_desde')
+    fecha_hasta = request.args.get('fecha_hasta')
 
+    # 🔵 Buscar registros
+    if role in ['admin', 'superadmin']:
+        registros_query = Registro.query
+    else:
+        registros_query = Registro.query.filter_by(user_id=session['user_id'])
+
+    if fecha_desde:
+        registros_query = registros_query.filter(Registro.fecha >= fecha_desde)
+    if fecha_hasta:
+        registros_query = registros_query.filter(Registro.fecha <= fecha_hasta)
+
+    registros = registros_query.all()
+
+    # 🔵 Crear DataFrame
     df = pd.DataFrame([{
-        'usuario': r.user.username,
+        'usuario': r.user.username if r.user else 'Usuario eliminado',
         'fecha': r.fecha,
         'entrada': r.entrada,
         'salida': r.salida,
@@ -253,12 +268,13 @@ def exportar_excel():
         'horas_totales': round((r.horas or 0) + (r.viaje_ida or 0) + (r.viaje_vuelta or 0), 2),
         'km_ida': r.km_ida,
         'km_vuelta': r.km_vuelta,
-        'km_totales': (r.km_ida or 0) + (r.km_vuelta or 0),  # 👈 nuevo campo
+        'km_totales': (r.km_ida or 0) + (r.km_vuelta or 0),
         'tarea': r.tarea,
         'cliente': r.cliente,
         'comentarios': r.comentarios
     } for r in registros])
 
+    # 🔵 Generar el Excel
     archivo = BytesIO()
     with pd.ExcelWriter(archivo, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Registros')
@@ -282,6 +298,8 @@ def exportar_excel():
 
     archivo.seek(0)
     return send_file(archivo, as_attachment=True, download_name=f"registros_{session['username']}.xlsx")
+
+
 
 
 @app.route('/editar_registro/<int:id>', methods=['GET', 'POST'])
