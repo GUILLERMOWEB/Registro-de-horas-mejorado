@@ -75,7 +75,7 @@ class Registro(db.Model):
     tarea = db.Column(db.Text)
     cliente = db.Column(db.Text)
     comentarios = db.Column(db.Text)
-    contrato            = db.Column(db.Boolean, nullable=False, default=False)
+    contrato = db.Column(db.Boolean, default=False)
     centro_costo_id     = db.Column(db.Integer, db.ForeignKey('centros_costo.id'), nullable=True)
     service_order       = db.Column(db.String(10), nullable=True)
     tipo_servicio_id    = db.Column(db.Integer, db.ForeignKey('tipos_servicio.id'), nullable=True)
@@ -230,11 +230,6 @@ def dashboard():
         tipos_servicio=tipos_servicio,
         lineas=lineas
 )
-
-
-
-
-
 
 @app.route('/exportar_excel')
 def exportar_excel():
