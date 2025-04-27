@@ -139,9 +139,6 @@ def dashboard():
         try:
             almuerzo_horas = int(float(request.form.get('almuerzo_horas', 0)))
             almuerzo = timedelta(hours=almuerzo_horas)
-
-
-            
         except ValueError:
             flash("El tiempo de almuerzo debe ser un número válido", "danger")
             return redirect(url_for('dashboard'))
@@ -203,20 +200,19 @@ def dashboard():
 
     registros = registros_query.order_by(Registro.fecha.desc()).all()
 
-    total_horas = sum([
-        (r.horas or 0) + (r.viaje_ida or 0) + (r.viaje_vuelta or 0)
+    total_horas = sum([ 
+        (r.horas or 0) + (r.viaje_ida or 0) + (r.viaje_vuelta or 0) 
         for r in registros
     ])
     total_km = sum([
-        (r.km_ida or 0) + (r.km_vuelta or 0)
+        (r.km_ida or 0) + (r.km_vuelta or 0) 
         for r in registros
     ])
-    
-    clientes = ClienteModel.query.order_by(ClienteModel.nombre).all()  # ← CORRECTO
+
+    clientes = ClienteModel.query.order_by(ClienteModel.nombre).all()
     centros_costo = CentroCosto.query.order_by(CentroCosto.nombre).all()
     tipos_servicio = TipoServicio.query.order_by(TipoServicio.nombre).all()
     lineas = Linea.query.order_by(Linea.nombre).all()
-
 
     return render_template(
         'dashboard.html',
@@ -228,8 +224,10 @@ def dashboard():
         clientes=clientes,
         centros_costo=centros_costo,
         tipos_servicio=tipos_servicio,
-        lineas=lineas
-)
+        lineas=lineas,
+        registro=None  # Pasar `None` para crear un nuevo registro
+    )
+
 
 @app.route('/exportar_excel')
 def exportar_excel():

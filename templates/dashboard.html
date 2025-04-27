@@ -20,34 +20,34 @@
     </div>
     <div class="col-md-2">
       <label for="almuerzo_horas" class="form-label">Tiempo de Almuerzo</label>
-      <input type="number" step="0.5" name="almuerzo_horas" class="form-control" value="{{ registro.almuerzo }}" min="0" required>
+      <input type="number" step="0.5" name="almuerzo_horas" class="form-control" value="{{ registro.almuerzo if registro else '' }}" min="0" required>
     </div>
     <div class="col-md-2">
       <label for="viaje_ida" class="form-label">Duración Viaje Ida (h)</label>
-      <input type="number" step="0.01" name="viaje_ida" class="form-control">
+      <input type="number" step="0.01" name="viaje_ida" class="form-control" value="{{ registro.viaje_ida if registro else '' }}">
     </div>
     <div class="col-md-2">
       <label for="viaje_vuelta" class="form-label">Duración Viaje Vuelta (h)</label>
-      <input type="number" step="0.01" name="viaje_vuelta" class="form-control">
+      <input type="number" step="0.01" name="viaje_vuelta" class="form-control" value="{{ registro.viaje_vuelta if registro else '' }}">
     </div>
     <div class="col-md-2">
       <label for="km_ida" class="form-label">KM de Ida</label>
-      <input type="number" step="0.1" name="km_ida" class="form-control">
+      <input type="number" step="0.1" name="km_ida" class="form-control" value="{{ registro.km_ida if registro else '' }}">
     </div>
     <div class="col-md-2">
       <label for="km_vuelta" class="form-label">KM de Vuelta</label>
-      <input type="number" step="0.1" name="km_vuelta" class="form-control">
+      <input type="number" step="0.1" name="km_vuelta" class="form-control" value="{{ registro.km_vuelta if registro else '' }}">
     </div>
     <div class="col-md-4">
       <label for="tarea" class="form-label">Tarea</label>
-      <input type="text" name="tarea" class="form-control">
+      <input type="text" name="tarea" class="form-control" value="{{ registro.tarea if registro else '' }}">
     </div>
     <div class="col-md-4">
       <label for="cliente" class="form-label">Cliente</label>
       <select name="cliente" class="form-control mb-3" id="cliente">
         <option value="">Seleccionar cliente...</option>
         {% for c in clientes %}
-          <option value="{{ c.nombre }}">{{ c.nombre }}</option>
+          <option value="{{ c.nombre }}" {% if c.nombre == registro.cliente %} selected {% endif %}>{{ c.nombre }}</option>
         {% endfor %}
       </select>
     </div>
@@ -56,7 +56,7 @@
       <select name="centro_costo" class="form-control">
         <option value="">Seleccionar centro de costo...</option>
         {% for c in centros_costo %}
-          <option value="{{ c.id }}">{{ c.nombre }}</option>
+          <option value="{{ c.id }}" {% if c.id == registro.centro_costo_id %} selected {% endif %}>{{ c.nombre }}</option>
         {% endfor %}
       </select>
     </div>
@@ -66,7 +66,7 @@
       <select name="tipo_servicio" class="form-control">
         <option value="">Seleccionar tipo de servicio...</option>
         {% for t in tipos_servicio %}
-          <option value="{{ t.id }}">{{ t.nombre }}</option>
+          <option value="{{ t.id }}" {% if t.id == registro.tipo_servicio_id %} selected {% endif %}>{{ t.nombre }}</option>
         {% endfor %}
       </select>
     </div>
@@ -76,18 +76,14 @@
       <select name="linea" class="form-control">
         <option value="">Seleccionar línea...</option>
         {% for l in lineas %}
-          <option value="{{ l.id }}">{{ l.nombre }}</option>
+          <option value="{{ l.id }}" {% if l.id == registro.linea_id %} selected {% endif %}>{{ l.nombre }}</option>
         {% endfor %}
       </select>
     </div>
-    
-    
-</select>
 
-    </div>
     <div class="col-md-8">
       <label for="comentarios" class="form-label">Comentarios</label>
-      <input type="text" name="comentarios" class="form-control">
+      <input type="text" name="comentarios" class="form-control" value="{{ registro.comentarios if registro else '' }}">
     </div>
     <div class="col-12">
       <button type="submit" class="btn btn-primary">Registrar</button>
@@ -161,4 +157,5 @@
   </div>
 </div>
 {% endblock %}
+
 
