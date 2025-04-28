@@ -15,7 +15,7 @@ from wtforms import StringField
 from wtforms.validators import DataRequired
 from wtforms import StringField, SubmitField
 from flask_login import login_required, current_user
-from models import db, User, RegistroHoras, ClienteModel
+from models import db, RegistroHoras, ClienteModel
 from functools import wraps
 
 # Función para convertir una hora en formato de texto a un número decimal
@@ -54,8 +54,6 @@ migrate = Migrate(app, db)
 # Asegúrate de que la base de datos se cree si no existe
 with app.app_context():
     db.create_all()
-
-# Resto de tu código para las rutas y la funcionalidad de la aplicación
 
 # ─── Modelos ─────────────────────────────────────
 class User(db.Model):
@@ -123,8 +121,6 @@ class FormularioCliente(FlaskForm):
     direccion = StringField('Dirección', validators=[DataRequired()])
     telefono = StringField('Teléfono')
     submit = SubmitField('Agregar Cliente')
-
-
 
 # ─── Inicialización de la base de datos ─────────
 with app.app_context():
