@@ -1,37 +1,62 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Cliente</title>
+</head>
+<body>
+    <h1>Agregar un nuevo cliente</h1>
 
-{% block content %}
-<div class="container mt-4">
-  <h2>Agregar Cliente</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-  {# Mostrar mensajes flash #}
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-        </div>
-      {% endfor %}
+    <form method="POST">
+        <label for="nombre">Nombre del Cliente:</label><br>
+        <input type="text" id="nombre" name="nombre" required><br><br>
+
+        <label for="direccion">Dirección:</label><br>
+        <input type="text" id="direccion" name="direccion" required><br><br>
+
+        <label for="telefono">Teléfono (opcional):</label><br>
+        <input type="text" id="telefono" name="telefono"><br><br>
+
+        <button type="submit">Agregar Cliente</button>
+    </form>
+
+    <br><hr><br>
+
+    <h2>Lista de Clientes</h2>
+    {% if clientes %}
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Dirección</th>
+                    <th>Teléfono</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                    <tr>
+                        <td>{{ cliente.id }}</td>
+                        <td>{{ cliente.nombre }}</td>
+                        <td>{{ cliente.direccion }}</td>
+                        <td>{{ cliente.telefono or '-' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay clientes cargados todavía.</p>
     {% endif %}
-  {% endwith %}
 
-  <form method="POST" action="{{ url_for('agregar_cliente') }}">
-    {{ form.hidden_tag() }}
-    <div class="form-group">
-        {{ form.nombre.label }}
-        {{ form.nombre(class="form-control") }}
-    </div>
-    <div class="form-group">
-        {{ form.direccion.label }}
-        {{ form.direccion(class="form-control") }}
-    </div>
-    <div class="form-group">
-        {{ form.telefono.label }}
-        {{ form.telefono(class="form-control") }}
-    </div>
-    <button type="submit" class="btn btn-primary">Agregar Cliente</button>
-</form>
-
-</div>
-{% endblock %}
+    <br>
+    <a href="{{ url_for('dashboard') }}">Volver al Dashboard</a>
+</body>
+</html>

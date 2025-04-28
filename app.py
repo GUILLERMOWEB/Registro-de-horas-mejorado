@@ -15,7 +15,6 @@ from wtforms import StringField
 from wtforms.validators import DataRequired
 from wtforms import StringField, SubmitField
 from flask_login import login_required
-from models import ClienteModel
 from cargar_cliente import ClienteModel
 
 
@@ -698,22 +697,31 @@ def ver_cliente():
 @app.route('/agregar_cliente', methods=['GET', 'POST'])
 @login_required
 def agregar_cliente():
-    if not current_user.is_superadmin:  # Verificación de permisos
-        flash('No tienes permisos para agregar clientes', 'danger')
-        return redirect(url_for('index'))  # Redirige si no es superadmin
+    if current_user.role != 'superadmin':
+        flash('Acceso denegado: solo el superadministrador puede agregar clientes.', 'danger')
+        return redirect(url_for('dashboard'))
 
-    form = FormularioCliente()
-    if form.validate_on_submit():
-        # Crear nuevo cliente con los datos del formulario
-        cliente = Cliente(nombre=form.nombre.data,
-                         direccion=form.direccion.data,
-                         telefono=form.telefono.data)
-        db.session.add(cliente)
-        db.session.commit()
-        flash('Cliente agregado exitosamente', 'success')
-        return redirect(url_for('ver_clientes'))  # Redirige a la lista de clientes
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        direccion = request.form['direccion']
+        telefono = request.form.get('telefono')
 
-    return render_template('agregar_cliente.html', form=form)
+        nuevo_cliente = ClienteModel(nombre=nombre, direccion=direccion, telefono=telefono)
+
+        try:
+            db.session.add(nuevo_cliente)
+            db.session.commit()
+            flash('Cliente agregado exitosamente.', 'success')
+            return redirect(url_for('agregar_cliente'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al agregar el cliente: {e}', 'danger')
+
+    # Traer todos los clientes para mostrarlos en la tabla
+    clientes = ClienteModel.query.all()
+
+    return render_template('agregar_cliente.html', clientes=clientes)
+
     
 
 @app.route('/editar_cliente/<int:id>', methods=['GET', 'POST'])
