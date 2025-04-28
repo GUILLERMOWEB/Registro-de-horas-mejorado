@@ -16,7 +16,8 @@ from wtforms.validators import DataRequired
 from wtforms import StringField, SubmitField
 from flask_login import login_required
 from models import ClienteModel
-from agregar_cliente import *
+from cargar_cliente import ClienteModel
+
 
 
 
