@@ -15,8 +15,12 @@ from wtforms import StringField
 from wtforms.validators import DataRequired
 from wtforms import StringField, SubmitField
 from flask_login import login_required
-from cargar_cliente import ClienteModel
+from models import ClienteModel
 
+
+from models import db, User, RegistroHoras, ClienteModel
+
+db.init_app(app)
 
 
 
