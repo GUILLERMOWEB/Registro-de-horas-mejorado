@@ -183,8 +183,15 @@ def dashboard():
             return redirect(url_for('dashboard'))
 
         tarea = request.form.get('tarea', '').strip()
-        cliente = request.form.get('cliente', '').strip()
+        cliente_nombre = request.form.get('cliente', '').strip()
         comentarios = request.form.get('comentarios', '').strip()
+
+        # Buscar al cliente por nombre
+        cliente = ClienteModel.query.filter_by(nombre=cliente_nombre).first()
+
+        if not cliente:
+            flash(f"Cliente '{cliente_nombre}' no encontrado.", "danger")
+            return redirect(url_for('dashboard'))
 
         try:
             formato_hora = "%H:%M"
@@ -212,7 +219,7 @@ def dashboard():
             km_ida=km_ida,
             km_vuelta=km_vuelta,
             tarea=tarea,
-            cliente=cliente,
+            cliente_id=cliente.id,  # Referencia al cliente por ID
             comentarios=comentarios
         )
 
@@ -239,6 +246,7 @@ def dashboard():
         for r in registros
     ])
 
+    # Consultar los clientes, centros de costo, tipos de servicio y líneas
     clientes = ClienteModel.query.order_by(ClienteModel.nombre).all()
     centros_costo = CentroCosto.query.order_by(CentroCosto.nombre).all()
     tipos_servicio = TipoServicio.query.order_by(TipoServicio.nombre).all()
@@ -257,6 +265,7 @@ def dashboard():
         lineas=lineas,
         registro=None  # Pasar `None` para crear un nuevo registro
     )
+
 
 
 
