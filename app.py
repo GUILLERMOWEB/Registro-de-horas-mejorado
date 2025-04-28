@@ -745,7 +745,7 @@ def editar_cliente(id):
             cliente.nombre = nuevo_nombre
             db.session.commit()
             flash("Cliente actualizado con éxito", "success")
-            return redirect(url_for('ver_clientes'))
+            return redirect(url_for('ver_cliente'))
     return render_template('editar_cliente.html', cliente=cliente)
 
 @app.route('/borrar_cliente/<int:id>', methods=['POST'])
@@ -757,7 +757,7 @@ def borrar_cliente(id):
     db.session.delete(cliente)
     db.session.commit()
     flash("Cliente eliminado", "success")
-    return redirect(url_for('ver_clientes'))
+    return redirect(url_for('ver_cliente'))
 
 with app.app_context():
     db.create_all()
