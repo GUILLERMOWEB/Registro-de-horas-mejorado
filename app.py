@@ -14,26 +14,17 @@ from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import DataRequired
 from wtforms import StringField, SubmitField
-from flask_login import login_required
-from models import ClienteModel
-
-
+from flask_login import login_required, current_user
 from models import db, User, RegistroHoras, ClienteModel
+from functools import wraps
 
-db.init_app(app)
-
-
-
-
-#from app import db
-
-
+# Función para convertir una hora en formato de texto a un número decimal
 def convertir_hora_a_decimal(hora_str):
     try:
         return float(int(hora_str.strip()))
     except ValueError:
         return 0.0
-        
+
 # Decorador para asegurarse de que solo el superadministrador pueda acceder
 def superadmin_required(f):
     @wraps(f)
@@ -44,20 +35,27 @@ def superadmin_required(f):
         return f(*args, **kwargs)
     return wrapper
 
-
-
+# Inicialización de la aplicación Flask
 app = Flask(__name__)
+
+# Configuración de la base de datos con PostgreSQL
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'clave_secreta_para_sesiones'
 
+# Habilita la recarga automática de plantillas y la caché de Jinja
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.cache = {}
 
-# Configuración para PostgreSQL
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-# Inicializar Flask-Migrate
+# Inicializa la base de datos y el sistema de migración
+db.init_app(app)
 migrate = Migrate(app, db)
+
+# Asegúrate de que la base de datos se cree si no existe
+with app.app_context():
+    db.create_all()
+
+# Resto de tu código para las rutas y la funcionalidad de la aplicación
 
 # ─── Modelos ─────────────────────────────────────
 class User(db.Model):
@@ -760,6 +758,9 @@ def borrar_cliente(id):
     db.session.commit()
     flash("Cliente eliminado", "success")
     return redirect(url_for('ver_clientes'))
+
+with app.app_context():
+    db.create_all()
 
 
 
