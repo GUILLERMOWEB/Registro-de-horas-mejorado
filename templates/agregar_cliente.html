@@ -16,16 +16,22 @@
     {% endif %}
   {% endwith %}
 
-  <form method="POST" class="row g-3">
-    <div class="col-md-6">
-      <label for="nombre" class="form-label">Nombre del Cliente</label>
-      <input type="text" id="nombre" name="nombre" class="form-control" placeholder="Ingrese el nombre del cliente" required>
+  <form method="POST" action="{{ url_for('agregar_cliente') }}">
+    {{ form.hidden_tag() }}
+    <div class="form-group">
+        {{ form.nombre.label }}
+        {{ form.nombre(class="form-control") }}
     </div>
+    <div class="form-group">
+        {{ form.direccion.label }}
+        {{ form.direccion(class="form-control") }}
+    </div>
+    <div class="form-group">
+        {{ form.telefono.label }}
+        {{ form.telefono(class="form-control") }}
+    </div>
+    <button type="submit" class="btn btn-primary">Agregar Cliente</button>
+</form>
 
-    <div class="col-12">
-      <button type="submit" class="btn btn-primary">Agregar Cliente</button>
-      <a href="{{ url_for('ver_clientes') }}" class="btn btn-secondary">Cancelar</a>
-    </div>
-  </form>
 </div>
 {% endblock %}

@@ -18,6 +18,16 @@ def convertir_hora_a_decimal(hora_str):
         return float(int(hora_str.strip()))
     except ValueError:
         return 0.0
+        
+# Decorador para asegurarse de que solo el superadministrador pueda acceder
+def superadmin_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if current_user.role != 'superadmin':  # Verifica el rol del usuario
+            flash('No tienes permisos para realizar esta acción', 'danger')
+            return redirect(url_for('index'))  # Redirige a la página principal
+        return f(*args, **kwargs)
+    return wrapper
 
 
 
@@ -85,12 +95,22 @@ class Registro(db.Model):
     linea          = db.relationship('Linea')
     
     
-class ClienteModel(db.Model):
+class Cliente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False, unique=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    direccion = db.Column(db.String(200), nullable=False)
+    telefono = db.Column(db.String(50), nullable=True)
 
     def __repr__(self):
         return f'<Cliente {self.nombre}>'
+
+        
+class FormularioCliente(FlaskForm):
+    nombre = StringField('Nombre', validators=[DataRequired()])
+    direccion = StringField('Dirección', validators=[DataRequired()])
+    telefono = StringField('Teléfono')
+    submit = SubmitField('Agregar Cliente')
+
 
 
 # ─── Inicialización de la base de datos ─────────
@@ -649,23 +669,25 @@ def ver_clientes():
     return render_template('clientes.html', clientes=clientes)
 
 @app.route('/agregar_cliente', methods=['GET', 'POST'])
+@login_required
 def agregar_cliente():
-    if 'user_id' not in session or session.get('role') != 'superadmin':
-        flash("Acceso denegado", "danger")
-        return redirect(url_for('dashboard'))
-    if request.method == 'POST':
-        nombre = request.form.get('nombre', '').strip()
-        if not nombre:
-            flash("El nombre no puede estar vacío", "danger")
-        elif ClienteModel.query.filter_by(nombre=nombre).first():
-            flash("Ese cliente ya existe", "warning")
-        else:
-            nuevo = ClienteModel(nombre=nombre)
-            db.session.add(nuevo)
-            db.session.commit()
-            flash("Cliente agregado con éxito", "success")
-            return redirect(url_for('ver_clientes'))
-    return render_template('agregar_cliente.html')
+    if not current_user.is_superadmin:  # Verificación de permisos
+        flash('No tienes permisos para agregar clientes', 'danger')
+        return redirect(url_for('index'))  # Redirige si no es superadmin
+
+    form = FormularioCliente()
+    if form.validate_on_submit():
+        # Crear nuevo cliente con los datos del formulario
+        cliente = Cliente(nombre=form.nombre.data,
+                         direccion=form.direccion.data,
+                         telefono=form.telefono.data)
+        db.session.add(cliente)
+        db.session.commit()
+        flash('Cliente agregado exitosamente', 'success')
+        return redirect(url_for('ver_clientes'))  # Redirige a la lista de clientes
+
+    return render_template('agregar_cliente.html', form=form)
+    
 
 @app.route('/editar_cliente/<int:id>', methods=['GET', 'POST'])
 def editar_cliente(id):
