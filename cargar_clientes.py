@@ -1,5 +1,6 @@
 from app import db, ClienteModel
 
+
 # Usar el contexto de la aplicación para ejecutar el código de la base de datos
 with app.app_context():
     clientes = [

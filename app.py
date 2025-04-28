@@ -16,6 +16,7 @@ from wtforms.validators import DataRequired
 from wtforms import StringField, SubmitField
 from flask_login import login_required
 from models import ClienteModel
+from agregar_cliente import *
 
 
 
@@ -679,13 +680,19 @@ def listar_usuarios():
     
 # ─── CRUD Clientes (solo superadmin) ───────────────────────────
 
-@app.route('/clientes')
-def ver_clientes():
-    if 'user_id' not in session or session.get('role') != 'superadmin':
-        flash("Acceso denegado", "danger")
-        return redirect(url_for('dashboard'))
-    clientes = ClienteModel.query.order_by(ClienteModel.nombre).all()
-    return render_template('clientes.html', clientes=clientes)
+@app.route('/ver_cliente', methods=['GET', 'POST'])
+def ver_cliente():
+    clientes = Cliente.query.all()  # Obtener todos los clientes
+
+    if request.method == 'POST':
+        cliente_id = request.form['cliente']  # Obtener el ID del cliente seleccionado
+        cliente = Cliente.query.get(cliente_id)  # Obtener el cliente por su ID
+        
+        # Aquí puedes realizar alguna acción con el cliente seleccionado
+        # Por ejemplo, mostrar los detalles del cliente o asociarlo con algo
+        return render_template('detalle_cliente.html', cliente=cliente)
+
+    return render_template('ver_cliente.html', clientes=clientes)
 
 @app.route('/agregar_cliente', methods=['GET', 'POST'])
 @login_required

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Cliente</title>
+</head>
+<body>
+    <h1>Selecciona un Cliente</h1>
+    <form method="POST">
+        <label for="cliente">Elige un cliente:</label>
+        <select name="cliente" id="cliente" required>
+            <option value="">Selecciona un cliente</option>
+            {% for cliente in clientes %}
+                <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <button type="submit">Ver Detalles</button>
+    </form>
+</body>
+</html>
