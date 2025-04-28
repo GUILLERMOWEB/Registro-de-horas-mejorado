@@ -82,6 +82,8 @@ class Linea(db.Model):
 
 class Registro(db.Model):
     __tablename__ = 'registros'
+    __table_args__ = {'extend_existing': True}  # Agrega esta línea
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     fecha = db.Column(db.String(50))
@@ -104,6 +106,7 @@ class Registro(db.Model):
     centro_costo   = db.relationship('CentroCosto')
     tipo_servicio  = db.relationship('TipoServicio')
     linea          = db.relationship('Linea')
+
     
     
 class Cliente(db.Model):
