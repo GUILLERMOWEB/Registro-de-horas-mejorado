@@ -1,6 +1,7 @@
-# models.py
 from flask_sqlalchemy import SQLAlchemy
 
+# Creamos una instancia de SQLAlchemy aquí, pero NO la inicializamos
+# La inicialización se hará en app.py
 db = SQLAlchemy()
 
 # -----------------------------
@@ -38,4 +39,3 @@ class ClienteModel(db.Model):
 
     def __repr__(self):
         return f'<Cliente {self.nombre}>'
-

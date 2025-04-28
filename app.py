@@ -15,8 +15,10 @@ from wtforms import StringField
 from wtforms.validators import DataRequired
 from wtforms import StringField, SubmitField
 from flask_login import login_required, current_user
-from models import db, RegistroHoras, ClienteModel
 from functools import wraps
+
+# Importar db de forma tardía para evitar importación circular
+from models import db, RegistroHoras, ClienteModel
 
 # Función para convertir una hora en formato de texto a un número decimal
 def convertir_hora_a_decimal(hora_str):
@@ -48,7 +50,7 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.cache = {}
 
 # Inicializa la base de datos y el sistema de migración
-db.init_app(app)
+db.init_app(app)  # Se inicializa db antes de usarlo
 migrate = Migrate(app, db)
 
 # Asegúrate de que la base de datos se cree si no existe
@@ -64,6 +66,7 @@ class User(db.Model):
     role = db.Column(db.String(50), nullable=False)
 
     registros = db.relationship('Registro', backref='user', lazy=True)
+
 
 class CentroCosto(db.Model):
     __tablename__ = 'centros_costo'
