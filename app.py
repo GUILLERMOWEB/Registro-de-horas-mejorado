@@ -10,6 +10,8 @@ from io import BytesIO
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from flask_migrate import Migrate
+from flask_wtf import FlaskForm
+
 #from app import db
 
 
