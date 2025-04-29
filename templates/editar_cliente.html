@@ -3,12 +3,25 @@
 {% block content %}
 <div class="container mt-4">
   <h2>Editar Cliente</h2>
+
   <form method="POST">
     <div class="mb-3">
-      <label for="nombre" class="form-label">Nuevo nombre</label>
-      <input type="text" name="nombre" class="form-control" value="{{ cliente.nombre }}" required>
+      <label for="nombre" class="form-label">Nombre</label>
+      <input type="text" name="nombre" id="nombre" class="form-control" value="{{ cliente.nombre }}" required>
     </div>
+
+    <div class="mb-3">
+      <label for="direccion" class="form-label">Dirección</label>
+      <input type="text" name="direccion" id="direccion" class="form-control" value="{{ cliente.direccion or '' }}">
+    </div>
+
+    <div class="mb-3">
+      <label for="telefono" class="form-label">Teléfono</label>
+      <input type="text" name="telefono" id="telefono" class="form-control" value="{{ cliente.telefono or '' }}">
+    </div>
+
     <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    <a href="{{ url_for('ver_cliente') }}" class="btn btn-secondary">Cancelar</a>
   </form>
 </div>
 {% endblock %}

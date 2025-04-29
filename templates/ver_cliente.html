@@ -1,22 +1,46 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ver Cliente</title>
-</head>
-<body>
-    <h1>Selecciona un Cliente</h1>
-    <form method="POST">
-        <label for="cliente">Elige un cliente:</label>
-        <select name="cliente" id="cliente" required>
-            <option value="">Selecciona un cliente</option>
-            {% for cliente in clientes %}
-                <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
-            {% endfor %}
-        </select>
-        <br>
-        <button type="submit">Ver Detalles</button>
+{% extends 'base.html' %}
+
+{% block title %}Clientes{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Administrar Clientes</h2>
+
+    <!-- Formulario para agregar cliente -->
+    <form method="POST" action="{{ url_for('ver_cliente') }}" class="row g-3 mb-4">
+        <div class="col-md-6">
+            <label for="nombre" class="form-label">Nombre del Cliente</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" required>
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary">Agregar Cliente</button>
+        </div>
     </form>
-</body>
-</html>
+
+    <!-- Tabla de clientes existentes -->
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cliente in clientes %}
+                <tr>
+                    <td>{{ cliente.id }}</td>
+                    <td>{{ cliente.nombre }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('eliminar_cliente', cliente_id=cliente.id) }}" onsubmit="return confirm('¿Estás seguro de que querés eliminar este cliente?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

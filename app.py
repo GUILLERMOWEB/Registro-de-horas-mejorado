@@ -672,8 +672,6 @@ def nuevo_registro():
         clientes=clientes
     )
 
-
-
 @app.route('/usuarios')
 def listar_usuarios():
     if 'user_id' not in session or session['role'] not in ['admin', 'superadmin']:
@@ -701,6 +699,7 @@ def ver_cliente():
 @app.route('/agregar_cliente', methods=['GET', 'POST'])
 @login_required
 def agregar_cliente():
+    # Solo el superadmin puede agregar clientes
     if current_user.role != 'superadmin':
         flash('Acceso denegado: solo el superadministrador puede agregar clientes.', 'danger')
         return redirect(url_for('dashboard'))
@@ -716,50 +715,76 @@ def agregar_cliente():
             db.session.add(nuevo_cliente)
             db.session.commit()
             flash('Cliente agregado exitosamente.', 'success')
-            return redirect(url_for('agregar_cliente'))
+            return redirect(url_for('dashboard'))  # <-- Redirige al dashboard superadmin
         except Exception as e:
             db.session.rollback()
             flash(f'Error al agregar el cliente: {e}', 'danger')
 
-    # Traer todos los clientes para mostrarlos en la tabla
+    # Traer todos los clientes para mostrar en el formulario si querés
     clientes = ClienteModel.query.all()
 
     return render_template('agregar_cliente.html', clientes=clientes)
 
+
     
 
-@app.route('/editar_cliente/<int:id>', methods=['GET', 'POST'])
-def editar_cliente(id):
-    if 'user_id' not in session or session.get('role') != 'superadmin':
-        flash("Acceso denegado", "danger")
+@app.route('/editar_cliente/<int:cliente_id>', methods=['GET', 'POST'])
+@login_required
+def editar_cliente(cliente_id):
+    # Verificación de rol
+    if session.get('role') != 'superadmin':
+        flash("Acceso denegado: solo el superadministrador puede editar clientes.", "danger")
         return redirect(url_for('dashboard'))
-    cliente = ClienteModel.query.get_or_404(id)
+
+    cliente = ClienteModel.query.get_or_404(cliente_id)
+
     if request.method == 'POST':
         nuevo_nombre = request.form.get('nombre', '').strip()
+        nueva_direccion = request.form.get('direccion', '').strip()
+        nuevo_telefono = request.form.get('telefono', '').strip()
+
+        # Validaciones básicas
         if not nuevo_nombre:
-            flash("El nombre no puede estar vacío", "danger")
+            flash("El nombre no puede estar vacío.", "danger")
         elif ClienteModel.query.filter(
-                ClienteModel.nombre == nuevo_nombre,
-                ClienteModel.id != id
-            ).first():
-            flash("Ya existe otro cliente con ese nombre", "warning")
+            ClienteModel.nombre == nuevo_nombre,
+            ClienteModel.id != cliente_id
+        ).first():
+            flash("Ya existe otro cliente con ese nombre.", "warning")
         else:
             cliente.nombre = nuevo_nombre
-            db.session.commit()
-            flash("Cliente actualizado con éxito", "success")
-            return redirect(url_for('ver_cliente'))
+            cliente.direccion = nueva_direccion
+            cliente.telefono = nuevo_telefono
+
+            try:
+                db.session.commit()
+                flash("Cliente actualizado con éxito.", "success")
+                return redirect(url_for('ver_cliente'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f"Error al actualizar el cliente: {e}", "danger")
+
     return render_template('editar_cliente.html', cliente=cliente)
 
-@app.route('/borrar_cliente/<int:id>', methods=['POST'])
-def borrar_cliente(id):
-    if 'user_id' not in session or session.get('role') != 'superadmin':
-        flash("Acceso denegado", "danger")
+@app.route('/borrar_cliente/<int:cliente_id>', methods=['POST'])
+@login_required
+def borrar_cliente(cliente_id):
+    # Solo permite si el usuario es superadmin
+    if session.get('role') != 'superadmin':
+        flash("Acceso denegado: solo el superadministrador puede eliminar clientes.", "danger")
         return redirect(url_for('dashboard'))
-    cliente = ClienteModel.query.get_or_404(id)
-    db.session.delete(cliente)
-    db.session.commit()
-    flash("Cliente eliminado", "success")
+
+    try:
+        cliente = ClienteModel.query.get_or_404(cliente_id)
+        db.session.delete(cliente)
+        db.session.commit()
+        flash("Cliente eliminado correctamente.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error al eliminar el cliente: {e}", "danger")
+
     return redirect(url_for('ver_cliente'))
+
 
 with app.app_context():
     db.create_all()
