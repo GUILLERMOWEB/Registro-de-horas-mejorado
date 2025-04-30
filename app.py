@@ -67,6 +67,8 @@ with app.app_context():
 def load_user(user_id):
     return User.query.get(int(user_id))  # Recupera el usuario por ID desde la base de datos
 
+
+
 # ─── Modelos ─────────────────────────────────────
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -694,6 +696,7 @@ def listar_usuarios():
 
 @app.route('/ver_cliente', methods=['GET', 'POST'])
 @login_required
+@superadmin_required
 def ver_cliente():
     clientes = Cliente.query.all()  # Obtener todos los clientes
 
