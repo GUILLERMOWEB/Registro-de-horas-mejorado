@@ -738,7 +738,7 @@ def agregar_cliente():
     # Obtener todos los clientes para mostrarlos en el formulario
     clientes = Cliente.query.all()
 
-    return render_template('agregar_cliente.html', clientes=clientes)
+    return render_template('agregar_cliente.html')
 
 
 
