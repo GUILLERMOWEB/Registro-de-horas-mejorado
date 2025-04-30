@@ -717,23 +717,28 @@ def agregar_cliente():
         direccion = request.form['direccion']
         telefono = request.form.get('telefono')
 
-        # Aquí cambiamos ClienteModel a Cliente
+        # Validación de datos antes de guardarlos
+        if not nombre or not direccion:
+            flash('El nombre y la dirección son campos obligatorios.', 'danger')
+            return redirect(url_for('agregar_cliente'))
+
+        # Crear un nuevo cliente
         nuevo_cliente = Cliente(nombre=nombre, direccion=direccion, telefono=telefono)
 
         try:
             db.session.add(nuevo_cliente)
             db.session.commit()
             flash('Cliente agregado exitosamente.', 'success')
-            return redirect(url_for('dashboard'))  # <-- Redirige al dashboard superadmin
+            return redirect(url_for('dashboard'))  # Redirige al dashboard superadmin
         except Exception as e:
             db.session.rollback()
             flash(f'Error al agregar el cliente: {e}', 'danger')
 
-    # Traer todos los clientes para mostrar en el formulario si querés
-    # Aquí también cambiamos ClienteModel a Cliente
+    # Obtener todos los clientes para mostrarlos en el formulario
     clientes = Cliente.query.all()
 
     return render_template('agregar_cliente.html', clientes=clientes)
+
 
 
     
