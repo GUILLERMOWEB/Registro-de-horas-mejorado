@@ -14,15 +14,11 @@ from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import DataRequired
 from wtforms import StringField, SubmitField
-from flask_login import LoginManager, login_required, current_user
+from flask_login import login_required, current_user
 from functools import wraps
 
 # Importar db de forma tardía para evitar importación circular
-from models import db, RegistroHoras, ClienteModel, User
-
-@login_manager.user_loader
-def load_user(user_id):
-    return Usuario.query.get(int(user_id))
+from models import db, RegistroHoras, ClienteModel
 
 # Función para convertir una hora en formato de texto a un número decimal
 def convertir_hora_a_decimal(hora_str):
@@ -43,13 +39,6 @@ def superadmin_required(f):
 
 # Inicialización de la aplicación Flask
 app = Flask(__name__)
-login_manager = LoginManager(app)
-
-# Permitir acceso a current_user en las plantillas HTML
-@app.context_processor
-def inject_user():
-    return dict(current_user=current_user)
-
 
 # Configuración de la base de datos con PostgreSQL
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
@@ -749,7 +738,10 @@ def agregar_cliente():
     clientes = Cliente.query.all()
 
     return render_template('agregar_cliente.html', clientes=clientes)
-  
+
+
+
+    
 
 @app.route('/editar_cliente/<int:cliente_id>', methods=['GET', 'POST'])
 @login_required
