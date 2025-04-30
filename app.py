@@ -18,7 +18,11 @@ from flask_login import LoginManager, login_required, current_user
 from functools import wraps
 
 # Importar db de forma tardía para evitar importación circular
-from models import db, RegistroHoras, ClienteModel
+from models import db, RegistroHoras, ClienteModel, Usuario
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
 
 # Función para convertir una hora en formato de texto a un número decimal
 def convertir_hora_a_decimal(hora_str):
