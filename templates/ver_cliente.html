@@ -2,7 +2,12 @@
 
 {% block content %}
 <div class="container mt-5">
-  <h2 class="mb-4">Ver detalles del Cliente</h2>
+  <h2 class="mb-4">Clientes</h2>
+
+  {% if current_user.role == 'superadmin' %}
+    <!-- Botón para agregar un nuevo cliente visible solo para el superadmin -->
+    <a href="{{ url_for('agregar_cliente') }}" class="btn btn-primary mb-4">Agregar Cliente</a>
+  {% endif %}
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -15,27 +20,42 @@
     {% endif %}
   {% endwith %}
 
-  <form method="POST" action="{{ url_for('ver_cliente') }}">
-    <div class="mb-3">
-      <label for="cliente" class="form-label">Selecciona un Cliente</label>
-      <select id="cliente" name="cliente" class="form-control" required>
-        <option value="" disabled selected>Selecciona un cliente...</option>
-        {% for cliente in clientes %}
-          <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
-        {% endfor %}
-      </select>
+  <h3 class="mb-3">Lista de Clientes</h3>
+  {% if clientes %}
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cliente in clientes %}
+          <tr>
+            <td>{{ cliente.id }}</td>
+            <td>{{ cliente.nombre }}</td>
+            <td>{{ cliente.direccion }}</td>
+            <td>{{ cliente.telefono or '-' }}</td>
+            <td>
+              {% if current_user.role == 'superadmin' %}
+                <a href="{{ url_for('editar_cliente', id=cliente.id) }}" class="btn btn-warning btn-sm">Editar</a>
+                <form method="POST" action="{{ url_for('borrar_cliente', id=cliente.id) }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que querés eliminar este cliente?');">
+                  <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    <button type="submit" class="btn btn-primary">Ver Cliente</button>
-  </form>
-
-  <hr>
-
-  <!-- Mostrar detalles del cliente, si existe -->
-  {% if cliente %}
-    <h3>Detalles del Cliente</h3>
-    <p><strong>Nombre:</strong> {{ cliente.nombre }}</p>
-    <p><strong>Dirección:</strong> {{ cliente.direccion }}</p>
-    <p><strong>Teléfono:</strong> {{ cliente.telefono or '-' }}</p>
+  {% else %}
+    <p>No hay clientes cargados todavía.</p>
   {% endif %}
 </div>
 {% endblock %}
+
