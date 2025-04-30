@@ -14,7 +14,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import DataRequired
 from wtforms import StringField, SubmitField
-from flask_login import login_required, current_user
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from functools import wraps
 
 # Importar db de forma tardía para evitar importación circular
@@ -52,6 +52,11 @@ app.jinja_env.cache = {}
 # Inicializa la base de datos y el sistema de migración
 db.init_app(app)  # Se inicializa db antes de usarlo
 migrate = Migrate(app, db)
+
+# Configuración de Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'  # nombre de la función de vista para login
 
 # Asegúrate de que la base de datos se cree si no existe
 with app.app_context():
@@ -683,6 +688,7 @@ def listar_usuarios():
 # ─── CRUD Clientes (solo superadmin) ───────────────────────────
 
 @app.route('/ver_cliente', methods=['GET', 'POST'])
+@login_required
 def ver_cliente():
     clientes = Cliente.query.all()  # Obtener todos los clientes
 
