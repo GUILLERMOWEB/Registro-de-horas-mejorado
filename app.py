@@ -682,7 +682,7 @@ def listar_usuarios():
     
 # ─── CRUD Clientes (solo superadmin) ───────────────────────────
 
-@@app.route('/ver_cliente', methods=['GET', 'POST'])
+@app.route('/ver_cliente', methods=['GET', 'POST'])
 def ver_cliente():
     clientes = Cliente.query.all()  # Obtener todos los clientes
 
