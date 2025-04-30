@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Detalles del Cliente</h2>
+
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">{{ cliente.nombre }}</h5>
+      <p><strong>Dirección:</strong> {{ cliente.direccion }}</p>
+      <p><strong>Teléfono:</strong> {{ cliente.telefono or 'No disponible' }}</p>
+      <p><strong>Email:</strong> {{ cliente.email or 'No disponible' }}</p>
+      <p><strong>Comentarios:</strong> {{ cliente.comentarios or 'No disponibles' }}</p>
+    </div>
+  </div>
+
+  <a href="{{ url_for('ver_cliente') }}" class="btn btn-secondary mt-4">Volver</a>
+</div>
+{% endblock %}

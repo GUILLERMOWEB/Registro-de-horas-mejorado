@@ -20,7 +20,33 @@
     {% endif %}
   {% endwith %}
 
-  <h3 class="mb-3">Lista de Clientes</h3>
+  <h3 class="mb-3">Selecciona un Cliente</h3>
+  <form method="POST" action="{{ url_for('ver_cliente') }}">
+    <div class="mb-3">
+      <label for="cliente" class="form-label">Selecciona un Cliente</label>
+      <select id="cliente" name="cliente_id" class="form-select" required>
+        <option value="" disabled selected>Seleccione un cliente</option>
+        {% for cliente in clientes %}
+          <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Ver Cliente</button>
+  </form>
+
+  {% if selected_cliente %}
+    <div class="card mt-4">
+      <div class="card-body">
+        <h5 class="card-title">{{ selected_cliente.nombre }}</h5>
+        <p><strong>Dirección:</strong> {{ selected_cliente.direccion }}</p>
+        <p><strong>Teléfono:</strong> {{ selected_cliente.telefono or 'No disponible' }}</p>
+        <p><strong>Email:</strong> {{ selected_cliente.email or 'No disponible' }}</p>
+        <p><strong>Comentarios:</strong> {{ selected_cliente.comentarios or 'No disponibles' }}</p>
+      </div>
+    </div>
+  {% endif %}
+
+  <h3 class="mb-3 mt-4">Lista de Clientes</h3>
   {% if clientes %}
     <div class="table-responsive">
       <table class="table table-bordered table-striped">
@@ -58,4 +84,5 @@
   {% endif %}
 </div>
 {% endblock %}
+
 

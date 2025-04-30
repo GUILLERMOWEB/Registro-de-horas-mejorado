@@ -704,6 +704,7 @@ def ver_cliente():
     return render_template('ver_cliente.html', clientes=clientes)
 
 
+
 @app.route('/agregar_cliente', methods=['GET', 'POST'])
 @login_required
 def agregar_cliente():
