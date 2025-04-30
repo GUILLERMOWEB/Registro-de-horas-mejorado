@@ -709,7 +709,8 @@ def agregar_cliente():
         direccion = request.form['direccion']
         telefono = request.form.get('telefono')
 
-        nuevo_cliente = ClienteModel(nombre=nombre, direccion=direccion, telefono=telefono)
+        # Aquí cambiamos ClienteModel a Cliente
+        nuevo_cliente = Cliente(nombre=nombre, direccion=direccion, telefono=telefono)
 
         try:
             db.session.add(nuevo_cliente)
@@ -721,7 +722,8 @@ def agregar_cliente():
             flash(f'Error al agregar el cliente: {e}', 'danger')
 
     # Traer todos los clientes para mostrar en el formulario si querés
-    clientes = ClienteModel.query.all()
+    # Aquí también cambiamos ClienteModel a Cliente
+    clientes = Cliente.query.all()
 
     return render_template('agregar_cliente.html', clientes=clientes)
 
