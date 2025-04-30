@@ -62,6 +62,11 @@ login_manager.login_view = 'login'  # nombre de la función de vista para login
 with app.app_context():
     db.create_all()
 
+# Función user_loader de Flask-Login
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))  # Recupera el usuario por ID desde la base de datos
+
 # ─── Modelos ─────────────────────────────────────
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
