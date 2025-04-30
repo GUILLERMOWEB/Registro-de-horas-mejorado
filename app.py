@@ -682,19 +682,27 @@ def listar_usuarios():
     
 # ─── CRUD Clientes (solo superadmin) ───────────────────────────
 
-@app.route('/ver_cliente', methods=['GET', 'POST'])
+@@app.route('/ver_cliente', methods=['GET', 'POST'])
 def ver_cliente():
     clientes = Cliente.query.all()  # Obtener todos los clientes
 
     if request.method == 'POST':
         cliente_id = request.form['cliente']  # Obtener el ID del cliente seleccionado
-        cliente = Cliente.query.get(cliente_id)  # Obtener el cliente por su ID
         
-        # Aquí puedes realizar alguna acción con el cliente seleccionado
-        # Por ejemplo, mostrar los detalles del cliente o asociarlo con algo
-        return render_template('detalle_cliente.html', cliente=cliente)
+        if not cliente_id:
+            flash('Debe seleccionar un cliente.', 'danger')
+            return redirect(url_for('ver_cliente'))
+        
+        cliente = Cliente.query.get(cliente_id)  # Obtener el cliente por su ID
+
+        if cliente:
+            return render_template('detalle_cliente.html', cliente=cliente)  # Muestra los detalles del cliente
+        else:
+            flash('Cliente no encontrado.', 'danger')
+            return redirect(url_for('ver_cliente'))  # Redirige de vuelta si no se encuentra el cliente
 
     return render_template('ver_cliente.html', clientes=clientes)
+
 
 @app.route('/agregar_cliente', methods=['GET', 'POST'])
 @login_required

@@ -1,46 +1,41 @@
-{% extends 'base.html' %}
-
-{% block title %}Clientes{% endblock %}
+{% extends "base.html" %}
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="mb-4">Administrar Clientes</h2>
+  <h2 class="mb-4">Ver detalles del Cliente</h2>
 
-    <!-- Formulario para agregar cliente -->
-    <form method="POST" action="{{ url_for('ver_cliente') }}" class="row g-3 mb-4">
-        <div class="col-md-6">
-            <label for="nombre" class="form-label">Nombre del Cliente</label>
-            <input type="text" class="form-control" id="nombre" name="nombre" required>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-        <div class="col-md-6 d-flex align-items-end">
-            <button type="submit" class="btn btn-primary">Agregar Cliente</button>
-        </div>
-    </form>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
 
-    <!-- Tabla de clientes existentes -->
-    <div class="table-responsive">
-        <table class="table table-striped table-bordered">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for cliente in clientes %}
-                <tr>
-                    <td>{{ cliente.id }}</td>
-                    <td>{{ cliente.nombre }}</td>
-                    <td>
-                        <form method="POST" action="{{ url_for('eliminar_cliente', cliente_id=cliente.id) }}" onsubmit="return confirm('¿Estás seguro de que querés eliminar este cliente?');">
-                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+  <form method="POST" action="{{ url_for('ver_cliente') }}">
+    <div class="mb-3">
+      <label for="cliente" class="form-label">Selecciona un Cliente</label>
+      <select id="cliente" name="cliente" class="form-control" required>
+        <option value="" disabled selected>Selecciona un cliente...</option>
+        {% for cliente in clientes %}
+          <option value="{{ cliente.id }}">{{ cliente.nombre }}</option>
+        {% endfor %}
+      </select>
     </div>
+    <button type="submit" class="btn btn-primary">Ver Cliente</button>
+  </form>
+
+  <hr>
+
+  <!-- Mostrar detalles del cliente, si existe -->
+  {% if cliente %}
+    <h3>Detalles del Cliente</h3>
+    <p><strong>Nombre:</strong> {{ cliente.nombre }}</p>
+    <p><strong>Dirección:</strong> {{ cliente.direccion }}</p>
+    <p><strong>Teléfono:</strong> {{ cliente.telefono or '-' }}</p>
+  {% endif %}
 </div>
 {% endblock %}
