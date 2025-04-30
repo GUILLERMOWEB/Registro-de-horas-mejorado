@@ -738,10 +738,7 @@ def agregar_cliente():
     clientes = Cliente.query.all()
 
     return render_template('agregar_cliente.html', clientes=clientes)
-
-
-
-    
+  
 
 @app.route('/editar_cliente/<int:cliente_id>', methods=['GET', 'POST'])
 @login_required
@@ -799,6 +796,10 @@ def borrar_cliente(cliente_id):
         flash(f"Error al eliminar el cliente: {e}", "danger")
 
     return redirect(url_for('ver_cliente'))
+
+@app.context_processor
+def inject_user():
+    return dict(current_user=current_user)
 
 
 with app.app_context():
