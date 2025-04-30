@@ -18,7 +18,7 @@ from flask_login import LoginManager, login_required, current_user
 from functools import wraps
 
 # Importar db de forma tardía para evitar importación circular
-from models import db, RegistroHoras, ClienteModel, Usuario
+from models import db, RegistroHoras, ClienteModel, User
 
 @login_manager.user_loader
 def load_user(user_id):
